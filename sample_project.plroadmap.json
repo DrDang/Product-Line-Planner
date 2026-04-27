@@ -1,0 +1,192 @@
+{
+  "schemaVersion": "0.1.0",
+  "project": {
+    "id": "proj_sample",
+    "name": "Example Product Line Roadmap",
+    "ownerRole": "Project Lead",
+    "dataMarking": "Internal Use",
+    "createdAt": "2026-04-25T08:00:00.000Z",
+    "updatedAt": "2026-04-25T08:00:00.000Z",
+    "snapshotNotes": "Sample snapshot for the Product-Line Roadmap Decision Tool."
+  },
+  "products": [
+    {
+      "id": "prod_product_1",
+      "name": "Product 1.0",
+      "status": "retired",
+      "description": "Retired production product retained for lineage and reference.",
+      "notes": "Historical baseline only.",
+      "successorProductId": "prod_product_2"
+    },
+    {
+      "id": "prod_product_2",
+      "name": "Product 2.0",
+      "status": "current",
+      "description": "Active production product for current roadmap decisions.",
+      "notes": "Primary active baseline.",
+      "successorProductId": "prod_product_3"
+    },
+    {
+      "id": "prod_product_25",
+      "name": "Product 2.5",
+      "status": "current",
+      "description": "Active intermediate product with selected capability upgrades.",
+      "notes": "Parallel active configuration.",
+      "successorProductId": ""
+    },
+    {
+      "id": "prod_product_3",
+      "name": "Product 3.0",
+      "status": "planned",
+      "description": "Planned next-generation product target.",
+      "notes": "Future block planning baseline.",
+      "successorProductId": ""
+    }
+  ],
+  "variants": [
+    {
+      "id": "var_product_1_b1",
+      "productId": "prod_product_1",
+      "name": "Released Baseline",
+      "block": "Product 1.0",
+      "hardwareRevision": "HW Rev A",
+      "softwareVersion": "SW 1.0",
+      "status": "retired",
+      "configurationNotes": "Retired production baseline."
+    },
+    {
+      "id": "var_product_2_b2",
+      "productId": "prod_product_2",
+      "name": "Active Baseline",
+      "block": "Product 2.0",
+      "hardwareRevision": "HW Rev B",
+      "softwareVersion": "SW 2.0",
+      "status": "current",
+      "configurationNotes": "Active production baseline."
+    },
+    {
+      "id": "var_product_25_b25",
+      "productId": "prod_product_25",
+      "name": "Active Baseline",
+      "block": "Product 2.5",
+      "hardwareRevision": "HW Rev B.5",
+      "softwareVersion": "SW 2.5",
+      "status": "current",
+      "configurationNotes": "Active intermediate baseline."
+    },
+    {
+      "id": "var_product_3_b3",
+      "productId": "prod_product_3",
+      "name": "Planned Baseline",
+      "block": "Product 3.0",
+      "hardwareRevision": "HW Rev C",
+      "softwareVersion": "SW 3.0",
+      "status": "planned",
+      "configurationNotes": "Planned future baseline."
+    }
+  ],
+  "capabilities": [
+    {
+      "id": "cap_remote_update",
+      "name": "Secure Remote Update",
+      "category": "Software Feature",
+      "description": "Support secure remote software update workflow."
+    },
+    {
+      "id": "cap_input_power",
+      "name": "Input Power Envelope",
+      "category": "Power Constraint",
+      "description": "Supported platform input power constraint, such as 28VDC or 40VDC operation."
+    }
+  ],
+  "capabilityClaims": [
+    {
+      "id": "claim_product_1_remote_update",
+      "variantId": "var_product_1_b1",
+      "capabilityId": "cap_remote_update",
+      "supportStatus": "partial",
+      "value": "baseline update workflow demo",
+      "maturity": "demonstrated",
+      "confidence": "medium",
+      "evidenceIds": [
+        "ev_remote_update_demo_001"
+      ],
+      "bdCaveat": "Do not claim formal qualification.",
+      "notes": "Demonstrated in lab, not formally verified across configurations."
+    },
+    {
+      "id": "claim_product_1_power",
+      "variantId": "var_product_1_b1",
+      "capabilityId": "cap_input_power",
+      "supportStatus": "supported",
+      "maturity": "verified",
+      "confidence": "high",
+      "evidenceIds": [],
+      "bdCaveat": "",
+      "notes": "28VDC input envelope."
+    },
+    {
+      "id": "claim_product_2_power",
+      "variantId": "var_product_2_b2",
+      "capabilityId": "cap_input_power",
+      "supportStatus": "supported",
+      "maturity": "verified",
+      "confidence": "high",
+      "evidenceIds": [],
+      "bdCaveat": "",
+      "notes": "40VDC input envelope."
+    }
+  ],
+  "evidence": [
+    {
+      "id": "ev_remote_update_demo_001",
+      "title": "Secure Remote Update Lab Demo",
+      "type": "demonstrated",
+      "reference": "UPDATE-DEMO-001",
+      "appliesTo": "prod_product_1",
+      "summary": "Lab demonstration of baseline remote update workflow.",
+      "confidence": "medium"
+    }
+  ],
+  "requirements": [],
+  "targetCapabilitySets": [],
+  "gaps": [
+    {
+      "id": "gap_remote_update",
+      "title": "Remote Update Verification Gap",
+      "targetCapabilityId": "cap_remote_update",
+      "variantId": "var_product_1_b1",
+      "description": "Current baseline has only demonstrated a manual update workflow; target requires verified remote update support.",
+      "severity": "high",
+      "businessImpact": "Blocks target segment claim.",
+      "technicalImpact": "controller, subsystem interface, verification campaign.",
+      "gapType": "true design gap"
+    }
+  ],
+  "roadmapCandidates": [
+    {
+      "id": "rc_048",
+      "name": "Secure Update Enablement",
+      "description": "Enable secure remote update workflow for planned products.",
+      "driver": "Remote update gap",
+      "targetProductId": "prod_product_3",
+      "gapIds": [
+        "gap_remote_update"
+      ],
+      "businessValue": "high",
+      "effort": "L",
+      "riskLevel": "high",
+      "scheduleDrivers": "Integration lab availability",
+      "assumptions": "Assumes existing controller has sufficient memory and security hooks.",
+      "decisionStatus": "study"
+    }
+  ],
+  "designElements": [],
+  "interfaces": [],
+  "impactAssessments": [],
+  "decisions": [],
+  "assumptions": [],
+  "risks": [],
+  "opportunities": [],
+  "viewSettings": {}
+}

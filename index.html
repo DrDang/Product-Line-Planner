@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Product-Line Roadmap Decision Tool</title>
+    <link rel="stylesheet" href="assets/styles.css">
+  </head>
+  <body>
+    <input id="fileInput" class="sr-only" type="file" accept=".json,.plroadmap.json,application/json">
+
+    <section id="landing" class="landing">
+      <main class="landing-card">
+        <header class="landing-header">
+          <div class="mark">PL</div>
+          <h1>Product-Line Roadmap Decision Tool</h1>
+          <p>Local-first capability, gap, and roadmap impact analysis for defensible block upgrade planning.</p>
+        </header>
+        <div class="landing-actions">
+          <button class="btn primary" data-action="open-file">Open .plroadmap.json</button>
+          <div class="divider"><span>or</span></div>
+          <div class="split-actions">
+            <button class="btn secondary" data-action="load-sample">Start from Sample Project</button>
+            <button class="btn secondary" data-action="new-project">Create Blank Project</button>
+          </div>
+        </div>
+        <section class="local-notice">
+          <strong>Local-first data notice</strong>
+          <span>This app runs from static files. Project data stays in this browser session until you export a snapshot.</span>
+        </section>
+        <footer class="landing-footer">
+          <span>Version 0.1.0</span>
+          <span class="schema-pill">Schema v0.1.0</span>
+        </footer>
+      </main>
+    </section>
+
+    <section id="app" class="app hidden" aria-live="polite">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark">PL</div>
+          <div>
+            <strong>Roadmap Tool</strong>
+            <span id="schemaLabel">Schema v0.1.0</span>
+          </div>
+        </div>
+        <nav id="nav" class="nav"></nav>
+        <div class="sidebar-footer">
+          <span id="dataMarking">Unmarked</span>
+          <button class="link-button" data-action="show-landing">Switch project</button>
+        </div>
+      </aside>
+
+      <div class="workspace">
+        <header class="topbar">
+          <div>
+            <strong id="projectName">Untitled Project</strong>
+            <span id="projectMeta">No file loaded</span>
+          </div>
+          <div class="topbar-actions">
+            <button class="btn ghost" data-action="open-file">Open</button>
+            <button class="btn ghost" data-action="export-project">Save Snapshot</button>
+            <button class="btn primary" data-action="export-report">Export Report</button>
+          </div>
+        </header>
+
+        <main id="content" class="content"></main>
+      </div>
+
+      <aside id="drawer" class="drawer" aria-hidden="true">
+        <header class="drawer-header">
+          <div>
+            <span id="drawerKicker">Detail</span>
+            <h2 id="drawerTitle">Record</h2>
+          </div>
+          <button class="icon-button" data-action="close-drawer" aria-label="Close detail drawer">x</button>
+        </header>
+        <div id="drawerBody" class="drawer-body"></div>
+        <footer id="drawerFooter" class="drawer-footer"></footer>
+      </aside>
+    </section>
+
+    <div id="toast" class="toast hidden"></div>
+    <script src="assets/app.js"></script>
+  </body>
+</html>
