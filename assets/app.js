@@ -385,8 +385,34 @@ function renderCapabilities() {
 
 function renderGaps() {
   const p = state.project;
+  const targetNeedIds = [...new Set(p.gaps.map((gap) => gap.targetCapabilityId).filter(Boolean))];
+  const comparedProductIds = [...new Set(p.gaps.map((gap) => byId(p.variants, gap.variantId)?.productId).filter(Boolean))];
   return `
-    ${pageHeader("Gap Analysis", "Compare target needs against selected products and separate true design gaps from evidence gaps.", `<button class="btn primary" data-add="gap">Add Gap</button>`)}
+    ${pageHeader("Gap Analysis", "Define target needs, compare selected products against them, and separate true design gaps from evidence gaps.", `<button class="btn secondary" data-add="targetNeed">Add Target Need</button><button class="btn primary" data-add="gap">Add Gap</button>`)}
+    <section class="analysis-setup">
+      <div>
+        <span class="setup-kicker">Target Analysis Setup</span>
+        <h2>What need are we trying to satisfy?</h2>
+        <p>Use target needs to state the future capability, customer requirement, market expectation, or block objective. Each gap below compares one target need against one or more selected products.</p>
+      </div>
+      <div class="setup-grid">
+        <article>
+          <span>Target Needs In This Analysis</span>
+          <strong>${esc(targetNeedIds.length || "None")}</strong>
+          <small>${esc(targetNeedIds.map((id) => capabilityName(id)).join(", ") || "Add a target need or create a gap to begin.")}</small>
+        </article>
+        <article>
+          <span>Products Being Compared</span>
+          <strong>${esc(comparedProductIds.length || "None")}</strong>
+          <small>${esc(comparedProductIds.map((id) => productName(id)).join(", ") || "Select products affected by each gap.")}</small>
+        </article>
+        <article>
+          <span>How To Classify</span>
+          <strong>Design or Evidence</strong>
+          <small>Design gaps need product change; evidence gaps need proof before making the claim.</small>
+        </article>
+      </div>
+    </section>
     <section class="summary-grid">
       ${metric("Design Gaps", p.gaps.filter((g) => g.gapType === "true design gap").length, "Require product change")}
       ${metric("Evidence Gaps", p.gaps.filter((g) => g.gapType === "evidence gap").length, "Require proof before claim")}
@@ -394,7 +420,7 @@ function renderGaps() {
     </section>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Gap</th><th>Variation Point</th><th>Product</th><th>Closing Candidate</th><th>Severity</th><th>Gap Type</th><th>Business Impact</th><th>Technical Impact</th></tr></thead>
+        <thead><tr><th>Gap</th><th>Target Need / Capability</th><th>Compared Product</th><th>Closing Candidate</th><th>Severity</th><th>Gap Type</th><th>Business Impact</th><th>Technical Impact</th></tr></thead>
         <tbody>
           ${p.gaps.map((g) => `<tr class="clickable-row" data-row-detail="gap:${g.id}">
             <td><strong>${esc(g.title || g.description)}</strong><br><span class="muted">${esc(g.description || "")}</span></td>
@@ -769,6 +795,7 @@ function openDetail(token) {
 function openAdd(type) {
   if (type === "product") return openProductDrawer({ id: makeId("prod"), name: "New Product", status: "planned", description: "", notes: "", successorProductId: "" }, true);
   if (type === "capability") return openCapabilityDrawer({ id: makeId("cap"), name: "New Variation Point", category: "", description: "" }, true);
+  if (type === "targetNeed") return openCapabilityDrawer({ id: makeId("cap"), name: "New Target Need", category: "", description: "" }, true, "Target Need");
   if (type === "gap") return openGapDrawer({ id: makeId("gap"), title: "New Gap", targetCapabilityId: state.project.capabilities[0]?.id || "", variantId: state.project.variants[0]?.id || "", description: "", severity: "medium", businessImpact: "", technicalImpact: "", gapType: "evidence gap" }, true);
   if (type === "candidate") return openCandidateDrawer({ id: makeId("rc"), name: "New Roadmap Candidate", decisionStatus: "study", effort: "M", riskLevel: "medium", targetProductId: state.project.products[0]?.id || "", gapIds: [] }, true);
   const map = {
@@ -797,12 +824,17 @@ function openGapDrawer(gap, isNew) {
   $("#drawerBody").innerHTML = `
     <form id="drawerForm" class="product-drawer-form">
       <section class="drawer-section">
-        <h3>Gap Definition</h3>
+        <h3>Target Need And Comparison</h3>
+        <div class="form-grid">
+          ${capabilitySelect("targetCapabilityId", "Target Need / Capability", gap.targetCapabilityId)}
+          ${productCheckboxes("productIds", "Products To Compare Against This Need", [currentProductId])}
+        </div>
+      </section>
+      <section class="drawer-section">
+        <h3>Observed Gap</h3>
         <div class="form-grid">
           ${input("title", "Gap Title", gap.title || "")}
           ${textarea("description", "Gap Description", gap.description)}
-          ${capabilitySelect("targetCapabilityId", "Variation Point", gap.targetCapabilityId)}
-          ${productCheckboxes("productIds", "Products Affected By This Gap", [currentProductId])}
           ${select("severity", "Severity", ["low", "medium", "high"], gap.severity || "medium")}
           ${select("gapType", "Gap Type", ["true design gap", "evidence gap", "unknown"], gap.gapType || "evidence gap")}
           ${candidateSelect("closingCandidateId", "Roadmap Candidate Addressing This Gap", linkedCandidate?.id || "", gap.id)}
@@ -939,7 +971,7 @@ function openCandidateDrawer(candidate, isNew) {
   });
 }
 
-function openCapabilityDrawer(capability, isNew) {
+function openCapabilityDrawer(capability, isNew, contextLabel = "Variation Point") {
   if (!capability) return;
   const focusProductId = selectedCapabilityProductId();
   const focusProduct = byId(state.project.products, focusProductId);
@@ -947,27 +979,27 @@ function openCapabilityDrawer(capability, isNew) {
   const linkedProductIds = isNew ? [] : productIdsForCapability(capability.id);
   const claims = isNew ? [] : state.project.capabilityClaims.filter((claim) => claim.capabilityId === capability.id);
   const gaps = isNew ? [] : state.project.gaps.filter((gap) => gap.targetCapabilityId === capability.id);
-  $("#drawerKicker").innerHTML = `${badge(capability.category || "variation point")} <span class="drawer-type">Variation Point</span>`;
+  $("#drawerKicker").innerHTML = `${badge(capability.category || contextLabel.toLowerCase())} <span class="drawer-type">${esc(contextLabel)}</span>`;
   $("#drawerTitle").textContent = capability.name || "New Variation Point";
   $("#drawerBody").innerHTML = `
     <form id="drawerForm" class="capability-drawer-form">
       <section class="drawer-section">
-        <h3>Variation Point Definition</h3>
+        <h3>${esc(contextLabel)} Definition</h3>
         <div class="form-grid">
-          ${input("name", "Variation Point Name", capability.name)}
+          ${input("name", `${contextLabel} Name`, capability.name)}
           ${input("category", "Type", capability.category)}
           ${textarea("description", "Description", capability.description)}
         </div>
       </section>
       <section class="drawer-section status-panel">
-        <h3>Product Variation Link</h3>
+        <h3>Product Support / Evidence Link</h3>
         <div class="support-link-grid">
-          ${productCheckboxes("supportProductIds", "Products Sharing This Variation Point", linkedProductIds)}
+          ${productCheckboxes("supportProductIds", `Products Associated With This ${contextLabel}`, linkedProductIds)}
           ${select("supportStatus", "Primary Status", ["supported", "partial", "not supported", "planned", "unknown"], focusClaim?.supportStatus || "unknown")}
           ${select("maturity", "Evidence Maturity", ["verified", "demonstrated", "analysis", "simulation", "assumption", "unknown"], focusClaim?.maturity || "unknown")}
           ${select("confidence", "Confidence", ["low", "medium", "high"], focusClaim?.confidence || "medium")}
         </div>
-        <button class="btn primary full-width" type="button" data-action="save-support-link">Save Product Variation Links</button>
+        <button class="btn primary full-width" type="button" data-action="save-support-link">Save Product Links</button>
       </section>
       <section class="drawer-section">
         <h3>Trace Summary</h3>
@@ -979,7 +1011,7 @@ function openCapabilityDrawer(capability, isNew) {
       </section>
     </form>
   `;
-  $("#drawerFooter").innerHTML = `${isNew ? "" : `<button class="btn danger mr-auto" data-action="delete-capability">Delete Variation Point</button>`}<button class="btn secondary" data-action="close-drawer">Cancel</button><button class="btn primary" data-action="save-capability">${isNew ? "Add Variation Point" : "Save Variation Point"}</button>`;
+  $("#drawerFooter").innerHTML = `${isNew ? "" : `<button class="btn danger mr-auto" data-action="delete-capability">Delete ${esc(contextLabel)}</button>`}<button class="btn secondary" data-action="close-drawer">Cancel</button><button class="btn primary" data-action="save-capability">${isNew ? `Add ${esc(contextLabel)}` : `Save ${esc(contextLabel)}`}</button>`;
   $("#drawer").classList.add("open", "capability-detail-drawer");
   $("#drawer").setAttribute("aria-hidden", "false");
   $("#drawerFooter [data-action='close-drawer']").addEventListener("click", closeDrawer);
@@ -1006,8 +1038,8 @@ function openCapabilityDrawer(capability, isNew) {
     state.project.viewSettings.capabilityProductId = selectedProductIds[0] || focusProductId;
     markDirty();
     render();
-    openCapabilityDrawer(capability, false);
-    toast("Variation point linked to product.");
+    openCapabilityDrawer(capability, false, contextLabel);
+    toast(`${contextLabel} linked to product.`);
   });
   const deleteButton = $("#drawerFooter [data-action='delete-capability']");
   if (deleteButton) deleteButton.addEventListener("click", () => {
@@ -1016,7 +1048,7 @@ function openCapabilityDrawer(capability, isNew) {
     markDirty();
     render();
     closeDrawer();
-    toast("Variation point deleted.");
+    toast(`${contextLabel} deleted.`);
   });
   $("#drawerFooter [data-action='save-capability']").addEventListener("click", () => {
     const values = Object.fromEntries(new FormData($("#drawerForm")).entries());
@@ -1025,7 +1057,7 @@ function openCapabilityDrawer(capability, isNew) {
     markDirty();
     render();
     closeDrawer();
-    toast(isNew ? "Variation point added." : "Variation point updated.");
+    toast(isNew ? `${contextLabel} added.` : `${contextLabel} updated.`);
   });
 }
 
