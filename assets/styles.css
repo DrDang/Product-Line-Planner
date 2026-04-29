@@ -355,11 +355,6 @@ textarea { min-height: 82px; resize: vertical; }
   align-items: center;
   gap: 8px;
 }
-.roadmap-readiness {
-  margin-left: auto;
-  color: var(--on-surface) !important;
-  font-weight: 800;
-}
 .roadmap-empty {
   color: var(--outline);
   font-size: 12px;
@@ -624,9 +619,18 @@ tr:hover td { background: var(--surface-low); }
 .drawer-list li {
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
   gap: 8px;
   padding: 8px;
   border-bottom: 1px solid var(--surface-variant);
+}
+.drawer-list li > span {
+  display: grid;
+  gap: 3px;
+}
+.drawer-list small {
+  color: var(--outline);
+  line-height: 1.35;
 }
 .drawer-list li:last-child { border-bottom: 0; }
 .drawer-action-stack {

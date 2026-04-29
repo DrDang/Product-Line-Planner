@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "0.1.0",
+  "schemaVersion": "0.2.0",
   "project": {
     "id": "proj_sample",
     "name": "Example Product Line Roadmap",
@@ -97,6 +97,12 @@
       "name": "Input Power Envelope",
       "category": "Power Constraint",
       "description": "Supported platform input power constraint, such as 28VDC or 40VDC operation."
+    },
+    {
+      "id": "cap_rx_band",
+      "name": "RX Band Coverage",
+      "category": "RF Capability",
+      "description": "Receive supported mission bands within the required sensitivity and selectivity envelope."
     }
   ],
   "capabilityClaims": [
@@ -106,13 +112,13 @@
       "capabilityId": "cap_remote_update",
       "supportStatus": "partial",
       "value": "baseline update workflow demo",
-      "maturity": "demonstrated",
+      "maturity": "verified",
       "confidence": "medium",
       "evidenceIds": [
         "ev_remote_update_demo_001"
       ],
       "bdCaveat": "Do not claim formal qualification.",
-      "notes": "Demonstrated in lab, not formally verified across configurations."
+      "notes": "Verified in lab with configuration caveats."
     },
     {
       "id": "claim_product_1_power",
@@ -135,13 +141,24 @@
       "evidenceIds": [],
       "bdCaveat": "",
       "notes": "40VDC input envelope."
+    },
+    {
+      "id": "claim_product_3_rx_band",
+      "variantId": "var_product_3_b3",
+      "capabilityId": "cap_rx_band",
+      "supportStatus": "planned",
+      "maturity": "analysis",
+      "confidence": "medium",
+      "evidenceIds": [],
+      "bdCaveat": "Requires antenna and RF front-end impact review.",
+      "notes": "Target band expansion under study."
     }
   ],
   "evidence": [
     {
       "id": "ev_remote_update_demo_001",
       "title": "Secure Remote Update Lab Demo",
-      "type": "demonstrated",
+      "type": "verified",
       "reference": "UPDATE-DEMO-001",
       "appliesTo": "prod_product_1",
       "summary": "Lab demonstration of baseline remote update workflow.",
@@ -156,10 +173,21 @@
       "title": "Remote Update Verification Gap",
       "targetCapabilityId": "cap_remote_update",
       "variantId": "var_product_1_b1",
-      "description": "Current baseline has only demonstrated a manual update workflow; target requires verified remote update support.",
+      "description": "Current baseline has only limited verification for a manual update workflow; target requires verified remote update support.",
       "severity": "high",
       "businessImpact": "Blocks target segment claim.",
       "technicalImpact": "controller, subsystem interface, verification campaign.",
+      "gapType": "true design gap"
+    },
+    {
+      "id": "gap_rx_band",
+      "title": "RX Band Expansion Design Gap",
+      "targetCapabilityId": "cap_rx_band",
+      "variantId": "var_product_2_b2",
+      "description": "Target product needs expanded RX band support; current RF chain is not assessed for that band.",
+      "severity": "high",
+      "businessImpact": "Blocks expanded segment claim.",
+      "technicalImpact": "antenna, RF front end, filtering, calibration.",
       "gapType": "true design gap"
     }
   ],
@@ -179,11 +207,87 @@
       "scheduleDrivers": "Integration lab availability",
       "assumptions": "Assumes existing controller has sufficient memory and security hooks.",
       "decisionStatus": "study"
+    },
+    {
+      "id": "rc_062",
+      "name": "RX Band Expansion",
+      "description": "Expand receive band support for planned products.",
+      "driver": "Expanded mission band requirement",
+      "targetProductId": "prod_product_3",
+      "gapIds": [
+        "gap_rx_band"
+      ],
+      "businessValue": "high",
+      "effort": "L",
+      "riskLevel": "high",
+      "scheduleDrivers": "Antenna supplier lead time and RF test chamber availability",
+      "assumptions": "Assumes enclosure aperture and front-end noise figure can support the new band.",
+      "decisionStatus": "study"
     }
   ],
-  "designElements": [],
+  "designElements": [
+    {
+      "id": "de_antenna",
+      "name": "Antenna Assembly",
+      "type": "hardware",
+      "owner": "RF Engineering",
+      "description": "Antenna aperture, matching network, mounting, and band-dependent performance."
+    },
+    {
+      "id": "de_rf_front_end",
+      "name": "RF Front End",
+      "type": "hardware",
+      "owner": "RF Engineering",
+      "description": "Low-noise amplifier, filtering, switching, and receive chain components."
+    },
+    {
+      "id": "de_control_module",
+      "name": "Control Module",
+      "type": "firmware",
+      "owner": "Firmware",
+      "description": "Primary control and processing module."
+    }
+  ],
+  "capabilityDesignLinks": [
+    {
+      "id": "cdl_rx_band_antenna",
+      "capabilityId": "cap_rx_band",
+      "designElementId": "de_antenna",
+      "impactType": "band-dependent hardware",
+      "rationale": "RX band changes may require antenna tuning, aperture, or matching changes."
+    },
+    {
+      "id": "cdl_rx_band_rf_front_end",
+      "capabilityId": "cap_rx_band",
+      "designElementId": "de_rf_front_end",
+      "impactType": "RF chain compatibility",
+      "rationale": "RX band changes can affect filtering, LNA selection, switching, and calibration."
+    },
+    {
+      "id": "cdl_remote_update_control",
+      "capabilityId": "cap_remote_update",
+      "designElementId": "de_control_module",
+      "impactType": "firmware resource margin",
+      "rationale": "Secure update workflows depend on controller memory, boot flow, and security hooks."
+    }
+  ],
   "interfaces": [],
-  "impactAssessments": [],
+  "impactAssessments": [
+    {
+      "id": "imp_001",
+      "roadmapCandidateId": "rc_062",
+      "designElementId": "de_antenna",
+      "impactType": "band-dependent hardware",
+      "severity": "high",
+      "confidence": "medium",
+      "owner": "RF Engineering",
+      "effort": "L",
+      "scheduleDriver": "Antenna supplier quote and chamber time",
+      "verificationConsequence": "Antenna pattern and sensitivity verification required.",
+      "riskConsequence": "May require enclosure or aperture change.",
+      "basis": "Suggested by RX band to antenna link."
+    }
+  ],
   "decisions": [],
   "assumptions": [],
   "risks": [],

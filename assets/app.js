@@ -1,12 +1,13 @@
 "use strict";
 
-const SCHEMA_VERSION = "0.1.0";
+const SCHEMA_VERSION = "0.2.0";
 const nowIso = () => new Date().toISOString();
 
 const navItems = [
   ["dashboard", "Dashboard", "grid"],
   ["products", "Products", "box"],
   ["matrix", "Variation Points", "layers"],
+  ["design", "Design Elements", "grid"],
   ["gaps", "Gap Analysis", "split"],
   ["candidates", "Roadmap Candidates", "route"],
   ["impacts", "Impact Analysis", "bars"],
@@ -61,6 +62,7 @@ function blankProject() {
     gaps: [],
     roadmapCandidates: [],
     designElements: [],
+    capabilityDesignLinks: [],
     interfaces: [],
     impactAssessments: [],
     decisions: [],
@@ -97,37 +99,50 @@ function sampleProject() {
   p.capabilities = [
     { id: "cap_remote_update", name: "Secure Remote Update", category: "Software Feature", description: "Support secure remote software update workflow." },
     { id: "cap_diag", name: "Automated Fault Isolation", category: "Diagnostics", description: "Localize field faults without SME intervention." },
+    { id: "cap_rx_band", name: "RX Band Coverage", category: "RF Capability", description: "Receive supported mission bands within the required sensitivity and selectivity envelope." },
     { id: "cap_performance_envelope", name: "Performance Envelope", category: "Performance", description: "Meet the target performance envelope for a future product." },
     { id: "cap_input_power", name: "Input Power Envelope", category: "Power Constraint", description: "Supported platform input power constraint, such as 28VDC or 40VDC operation." },
   ];
   p.evidence = [
-    { id: "ev_remote_update_demo_001", title: "Secure Remote Update Lab Demo", type: "demonstrated", reference: "UPDATE-DEMO-001", appliesTo: "prod_product_1", summary: "Lab demonstration of baseline remote update workflow.", confidence: "medium" },
+    { id: "ev_remote_update_demo_001", title: "Secure Remote Update Lab Verification", type: "verified", reference: "UPDATE-DEMO-001", appliesTo: "prod_product_1", summary: "Lab verification record for the baseline remote update workflow.", confidence: "medium" },
     { id: "ev_diag_test_014", title: "Diagnostic Regression Test", type: "verified", reference: "TEST-014", appliesTo: "prod_product_2", summary: "Automated fault isolation passed representative regression suite.", confidence: "high" },
     { id: "ev_performance_analysis_003", title: "Performance Envelope Analysis", type: "simulation", reference: "ANALYSIS-PERF-003", appliesTo: "prod_product_3", summary: "Analysis only. Requires verification evidence before claim.", confidence: "low" },
   ];
   p.capabilityClaims = [
-    { id: "claim_product_1_remote_update", variantId: "var_product_1_b1", capabilityId: "cap_remote_update", supportStatus: "partial", maturity: "demonstrated", confidence: "medium", evidenceIds: ["ev_remote_update_demo_001"], bdCaveat: "Do not claim formal qualification.", notes: "Demonstrated in a controlled lab setting." },
+    { id: "claim_product_1_remote_update", variantId: "var_product_1_b1", capabilityId: "cap_remote_update", supportStatus: "partial", maturity: "verified", confidence: "medium", evidenceIds: ["ev_remote_update_demo_001"], bdCaveat: "Do not claim formal qualification.", notes: "Verified in a controlled lab setting." },
     { id: "claim_product_2_remote_update", variantId: "var_product_2_b2", capabilityId: "cap_remote_update", supportStatus: "planned", maturity: "assumption", confidence: "low", evidenceIds: [], bdCaveat: "Future roadmap only.", notes: "Depends on controller resource margin." },
     { id: "claim_product_2_diag", variantId: "var_product_2_b2", capabilityId: "cap_diag", supportStatus: "supported", maturity: "verified", confidence: "high", evidenceIds: ["ev_diag_test_014"], bdCaveat: "", notes: "Good candidate for Block 2 include." },
     { id: "claim_product_25_diag", variantId: "var_product_25_b25", capabilityId: "cap_diag", supportStatus: "supported", maturity: "verified", confidence: "high", evidenceIds: ["ev_diag_test_014"], bdCaveat: "", notes: "Shared with Product 2.0." },
+    { id: "claim_product_3_rx_band", variantId: "var_product_3_b3", capabilityId: "cap_rx_band", supportStatus: "planned", maturity: "analysis", confidence: "medium", evidenceIds: [], bdCaveat: "Requires antenna and RF front-end impact review.", notes: "Target band expansion under study." },
     { id: "claim_product_3_performance", variantId: "var_product_3_b3", capabilityId: "cap_performance_envelope", supportStatus: "planned", maturity: "unknown", confidence: "low", evidenceIds: [], bdCaveat: "Do not promise.", notes: "Planned architecture not assessed for data throughput." },
     { id: "claim_product_1_power", variantId: "var_product_1_b1", capabilityId: "cap_input_power", supportStatus: "supported", maturity: "verified", confidence: "high", evidenceIds: [], bdCaveat: "", notes: "28VDC input envelope." },
     { id: "claim_product_2_power", variantId: "var_product_2_b2", capabilityId: "cap_input_power", supportStatus: "supported", maturity: "verified", confidence: "high", evidenceIds: [], bdCaveat: "", notes: "40VDC input envelope." },
   ];
   p.gaps = [
-    { id: "gap_remote_update", title: "Remote Update Verification Gap", targetCapabilityId: "cap_remote_update", variantId: "var_product_1_b1", description: "Current baseline has only demonstrated a manual update workflow; target requires verified remote update support.", severity: "high", businessImpact: "Blocks target segment claim.", technicalImpact: "controller, subsystem interface, verification campaign.", gapType: "true design gap" },
+    { id: "gap_remote_update", title: "Remote Update Verification Gap", targetCapabilityId: "cap_remote_update", variantId: "var_product_1_b1", description: "Current baseline has only limited verification for a manual update workflow; target requires verified remote update support.", severity: "high", businessImpact: "Blocks target segment claim.", technicalImpact: "controller, subsystem interface, verification campaign.", gapType: "true design gap" },
+    { id: "gap_rx_band", title: "RX Band Expansion Design Gap", targetCapabilityId: "cap_rx_band", variantId: "var_product_2_b2", description: "Target product needs expanded RX band support; current RF chain is not assessed for that band.", severity: "high", businessImpact: "Blocks expanded segment claim.", technicalImpact: "antenna, RF front end, filtering, calibration.", gapType: "true design gap" },
     { id: "gap_performance_evidence", title: "Performance Evidence Gap", targetCapabilityId: "cap_performance_envelope", variantId: "var_product_2_b2", description: "Performance envelope is analysis-only and not verified on target hardware.", severity: "medium", businessImpact: "Target segment proposal caveat.", technicalImpact: "Subsystem model, verification test, supplier quote.", gapType: "evidence gap" },
   ];
   p.roadmapCandidates = [
     { id: "rc_048", name: "Secure Update Enablement", description: "Enable secure remote update workflow for planned products.", driver: "Remote update gap", targetProductId: "prod_product_3", gapIds: ["gap_remote_update"], businessValue: "high", effort: "L", riskLevel: "high", scheduleDrivers: "Integration lab availability", assumptions: "Assumes existing controller has sufficient memory and security hooks.", decisionStatus: "study" },
     { id: "rc_051", name: "Automated Fault Isolation Matrix", description: "Add field diagnostic decision matrix.", driver: "Reduce MTTR and support burden", targetProductId: "prod_product_25", gapIds: [], businessValue: "medium", effort: "M", riskLevel: "low", scheduleDrivers: "Test equipment scripting", assumptions: "Assumes existing telemetry is sufficient.", decisionStatus: "include" },
+    { id: "rc_062", name: "RX Band Expansion", description: "Expand receive band support for planned products.", driver: "Expanded mission band requirement", targetProductId: "prod_product_3", gapIds: ["gap_rx_band"], businessValue: "high", effort: "L", riskLevel: "high", scheduleDrivers: "Antenna supplier lead time and RF test chamber availability", assumptions: "Assumes enclosure aperture and front-end noise figure can support the new band.", decisionStatus: "study" },
   ];
   p.designElements = [
+    { id: "de_antenna", name: "Antenna Assembly", type: "hardware", owner: "RF Engineering", description: "Antenna aperture, matching network, mounting, and band-dependent performance." },
+    { id: "de_rf_front_end", name: "RF Front End", type: "hardware", owner: "RF Engineering", description: "Low-noise amplifier, filtering, switching, and receive chain components." },
     { id: "de_control_module", name: "Control Module", type: "firmware", owner: "Firmware", description: "Primary control and processing module." },
     { id: "de_diag", name: "Diagnostic Service", type: "software", owner: "Software", description: "Built-in-test and fault isolation service." },
   ];
+  p.capabilityDesignLinks = [
+    { id: "cdl_rx_band_antenna", capabilityId: "cap_rx_band", designElementId: "de_antenna", impactType: "band-dependent hardware", rationale: "RX band changes may require antenna tuning, aperture, or matching changes." },
+    { id: "cdl_rx_band_rf_front_end", capabilityId: "cap_rx_band", designElementId: "de_rf_front_end", impactType: "RF chain compatibility", rationale: "RX band changes can affect filtering, LNA selection, switching, and calibration." },
+    { id: "cdl_remote_update_control", capabilityId: "cap_remote_update", designElementId: "de_control_module", impactType: "firmware resource margin", rationale: "Secure update workflows depend on controller memory, boot flow, and security hooks." },
+    { id: "cdl_diag_service", capabilityId: "cap_diag", designElementId: "de_diag", impactType: "software function", rationale: "Diagnostic capability changes map directly to the diagnostic service." },
+  ];
   p.impactAssessments = [
     { id: "imp_001", roadmapCandidateId: "rc_048", designElementId: "de_control_module", impactType: "resource margin", severity: "major redesign", confidence: "low", owner: "Firmware", effort: "L-XL", scheduleDriver: "controller utilization estimate", verificationConsequence: "New regression and verification demo required.", riskConsequence: "May force hardware respin.", basis: "SME judgment from similar effort." },
+    { id: "imp_002", roadmapCandidateId: "rc_062", designElementId: "de_antenna", impactType: "band-dependent hardware", severity: "high", confidence: "medium", owner: "RF Engineering", effort: "L", scheduleDriver: "Antenna supplier quote and chamber time", verificationConsequence: "Antenna pattern and sensitivity verification required.", riskConsequence: "May require enclosure or aperture change.", basis: "Suggested by RX band to antenna link." },
   ];
   p.assumptions = [
     { id: "asm_001", statement: "Existing controller has enough margin for secure update hooks.", relatedId: "rc_048", confidence: "low", owner: "Firmware", validationPlan: "Complete utilization estimate.", consequenceIfFalse: "Candidate may require HW Rev D." },
@@ -141,6 +156,15 @@ function normalizeProject(project) {
   for (const key of Object.keys(base)) {
     if (Array.isArray(base[key]) && !Array.isArray(normalized[key])) normalized[key] = [];
   }
+  normalized.capabilityClaims.forEach((claim) => {
+    if (claim.maturity === "demonstrated") claim.maturity = "verified";
+  });
+  normalized.evidence.forEach((evidence) => {
+    if (evidence.type === "demonstrated") evidence.type = "verified";
+  });
+  normalized.capabilityDesignLinks.forEach((link) => {
+    link.id = link.id || makeId("cdl");
+  });
   normalized.viewSettings = normalized.viewSettings || {};
   normalized.schemaVersion = normalized.schemaVersion || SCHEMA_VERSION;
   return normalized;
@@ -172,6 +196,7 @@ function render() {
     dashboard: renderDashboard,
     products: renderProducts,
     matrix: renderCapabilities,
+    design: renderDesignElements,
     gaps: renderGaps,
     candidates: renderCandidates,
     impacts: renderImpacts,
@@ -286,16 +311,12 @@ function productRoadmapSection() {
 
 function roadmapNode(product) {
   const variants = productVariants(product.id);
-  const variantIds = variants.map((variant) => variant.id);
-  const claims = state.project.capabilityClaims.filter((claim) => variantIds.includes(claim.variantId));
-  const verified = claims.filter((claim) => claim.maturity === "verified").length;
-  const readiness = claims.length ? Math.round((verified / claims.length) * 100) : 0;
   const successor = byId(state.project.products, product.successorProductId);
   return `
     <button class="roadmap-node ${successor ? "has-successor" : ""}" data-detail="product:${product.id}" ${successor ? `data-successor="${esc(successor.name)}"` : ""}>
       <strong>${esc(product.name)}</strong>
       <span>${esc(variants[0]?.name || "Product")} ${esc(variants[0]?.block || "")}</span>
-      <div>${badge(product.status)} <span class="roadmap-readiness">${readiness}%</span></div>
+      <div>${badge(product.status)}</div>
       ${successor ? `<span class="roadmap-successor">Successor → ${esc(successor.name)}</span>` : ""}
     </button>
   `;
@@ -346,7 +367,6 @@ function renderCapabilities() {
         <select data-capability-filter="maturity">
           <option value="">All</option>
           <option value="verified">Verified</option>
-          <option value="demonstrated">Demonstrated</option>
           <option value="analysis">Analysis</option>
           <option value="simulation">Simulation</option>
           <option value="assumption">Assumption</option>
@@ -354,29 +374,63 @@ function renderCapabilities() {
         </select>
       </div>
       <div class="filter">
-        <label>Claim Status</label>
-        <select data-capability-filter="claimability">
+        <label>Confidence</label>
+        <select data-capability-filter="confidence">
           <option value="">All</option>
-          <option value="claimable">Claimable</option>
-          <option value="caveat">Caveat</option>
-          <option value="not-claimable">Not Claimable</option>
+          <option value="high">High</option>
+          <option value="medium">Medium</option>
+          <option value="low">Low</option>
+          <option value="unknown">Unknown</option>
         </select>
       </div>
     </section>
     <div class="table-wrap capability-page-table">
       <table class="capability-table">
-        <thead><tr><th>Variation Point</th><th>Type</th><th>${esc(selectedProduct?.name || "Product")} Status</th><th>Evidence Maturity</th><th>Claim Status</th></tr></thead>
+        <thead><tr><th>Variation Point</th><th>Type</th><th>${esc(selectedProduct?.name || "Product")} Status</th><th>Evidence Maturity</th><th>Confidence</th><th>Linked Design</th></tr></thead>
         <tbody>
           ${p.capabilities.map((cap) => {
             const claim = claimForProductCapability(selectedProductId, cap.id);
-            return `<tr class="clickable-row" data-row-detail="capability:${cap.id}" data-capability-category="${esc(cap.category || "")}" data-capability-maturity="${esc(claim?.maturity || "unknown")}" data-capability-claimability="${esc(claimability(claim))}">
+            const linkedDesign = linkedDesignElementsForCapability(cap.id);
+            return `<tr class="clickable-row" data-row-detail="capability:${cap.id}" data-capability-category="${esc(cap.category || "")}" data-capability-maturity="${esc(claim?.maturity || "unknown")}" data-capability-confidence="${esc(claim?.confidence || "unknown")}">
               <td><strong>${esc(cap.name)}</strong><br><span class="muted">${esc(cap.description || "No description captured")}</span></td>
               <td>${esc(cap.category || "-")}</td>
               <td>${badge(claim?.supportStatus || "unknown")}</td>
               <td>${badge(claim?.maturity || "unknown")}</td>
-              <td>${badge(claimabilityLabel(claim))}</td>
+              <td>${badge(claim?.confidence || "unknown")}</td>
+              <td>${esc(linkedDesign.map((item) => item.design.name).join(", ") || "None")}</td>
             </tr>`;
           }).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function renderDesignElements() {
+  const p = state.project;
+  return `
+    ${pageHeader("Design Elements", "Map product-facing variation points to the parts of the design that change when those capabilities move.", `<button class="btn primary" data-add="design">Add Design Element</button>`)}
+    <section class="summary-grid">
+      ${metric("Design Elements", p.designElements.length, "Tracked architecture items")}
+      ${metric("Feature Links", p.capabilityDesignLinks.length, "Variation-to-design links")}
+      ${metric("Open Impacts", p.impactAssessments.length, "Candidate impact rows")}
+    </section>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Design Element</th><th>Type</th><th>Owner</th><th>Linked Variation Points</th><th>Open Candidate Impacts</th><th>Description</th></tr></thead>
+        <tbody>
+          ${p.designElements.map((design) => {
+            const linkedCapabilities = linkedCapabilitiesForDesign(design.id);
+            const impacts = p.impactAssessments.filter((impact) => impact.designElementId === design.id);
+            return `<tr class="clickable-row" data-row-detail="design:${design.id}">
+              <td><strong>${esc(design.name)}</strong></td>
+              <td>${badge(design.type || "unknown")}</td>
+              <td>${esc(design.owner || "-")}</td>
+              <td>${esc(linkedCapabilities.map((item) => item.capability.name).join(", ") || "None")}</td>
+              <td>${esc(impacts.map((impact) => candidateName(impact.roadmapCandidateId)).join(", ") || "None")}</td>
+              <td>${esc(design.description || "-")}</td>
+            </tr>`;
+          }).join("") || `<tr><td colspan="6">${empty("No design elements yet.")}</td></tr>`}
         </tbody>
       </table>
     </div>
@@ -592,6 +646,28 @@ function productNameForVariant(variantId) {
 }
 function candidateName(id) { return byId(state.project.roadmapCandidates, id)?.name || id || "Unknown candidate"; }
 function designElementName(id) { return byId(state.project.designElements, id)?.name || id || "Unknown design element"; }
+function linkedDesignElementsForCapability(capabilityId) {
+  return state.project.capabilityDesignLinks
+    .filter((link) => link.capabilityId === capabilityId)
+    .map((link) => ({ link, design: byId(state.project.designElements, link.designElementId) }))
+    .filter((item) => item.design);
+}
+function linkedCapabilitiesForDesign(designElementId) {
+  return state.project.capabilityDesignLinks
+    .filter((link) => link.designElementId === designElementId)
+    .map((link) => ({ link, capability: byId(state.project.capabilities, link.capabilityId) }))
+    .filter((item) => item.capability);
+}
+function suggestedDesignImpactsForCapability(capabilityId, candidateId = "") {
+  return linkedDesignElementsForCapability(capabilityId).map(({ link, design }) => {
+    const existingImpact = state.project.impactAssessments.find((impact) => impact.roadmapCandidateId === candidateId && impact.designElementId === design.id);
+    return { link, design, existingImpact };
+  });
+}
+function suggestedDesignImpactsForCandidate(candidate) {
+  const gap = primaryGapForCandidate(candidate);
+  return suggestedDesignImpactsForCapability(gap?.targetCapabilityId, candidate?.id);
+}
 function candidateProductName(candidate) {
   const product = byId(state.project.products, candidate.targetProductId);
   if (product) return product.name;
@@ -633,6 +709,7 @@ function variationTraceGraphic({ gap, candidate } = {}) {
   const candidateNodes = resolvedCandidate
     ? [resolvedCandidate]
     : candidates;
+  const designImpacts = suggestedDesignImpactsForCapability(variation?.id, resolvedCandidate?.id || "");
   return `
     <section class="drawer-section">
       <h3>Closure Trace</h3>
@@ -654,6 +731,10 @@ function variationTraceGraphic({ gap, candidate } = {}) {
           ${candidateNodes.length ? candidateNodes.map((item) => `<strong>${esc(item.name)}</strong><small>${esc(candidateProductName(item))}${item.decisionStatus ? ` · ${esc(title(item.decisionStatus))}` : ""}</small>`).join("") : "<strong>No closing candidate linked</strong><small>Select this gap in a roadmap candidate to close the loop.</small>"}
           ${product ? `<small>Target product: ${esc(product.name)}</small>` : ""}
         </div>
+      </div>
+      <div class="trace-design-links">
+        <h3>Design Impact Hints</h3>
+        ${designImpacts.length ? `<ul class="drawer-list">${designImpacts.map(({ link, design, existingImpact }) => `<li><span><strong>${esc(design.name)}</strong><small>${esc(link.impactType || design.type || "Linked design element")} · ${esc(link.rationale || "Review this design element when this variation point changes.")}</small></span>${existingImpact ? badge("impact captured") : badge("suggested")}</li>`).join("")}</ul>` : `<div class="muted">No design elements linked to this variation point yet.</div>`}
       </div>
     </section>
   `;
@@ -700,17 +781,6 @@ function claimForProductCapability(productId, capabilityId) {
 }
 function productIdsForCapability(capabilityId) {
   return state.project.products.filter((product) => claimForProductCapability(product.id, capabilityId)).map((product) => product.id);
-}
-function claimability(claim) {
-  if (!claim || claim.supportStatus === "not supported" || claim.supportStatus === "unknown") return "not-claimable";
-  if (claim.bdCaveat || ["planned", "partial"].includes(claim.supportStatus) || ["simulation", "assumption", "unknown"].includes(claim.maturity)) return "caveat";
-  return "claimable";
-}
-function claimabilityLabel(claim) {
-  const value = claimability(claim);
-  if (value === "claimable") return "claimable";
-  if (value === "caveat") return "claimable with caveat";
-  return "not claimable";
 }
 function capabilityEvidenceSummary(capabilityId) {
   const evidenceIds = state.project.capabilityClaims.filter((claim) => claim.capabilityId === capabilityId).flatMap((claim) => claim.evidenceIds || []);
@@ -761,7 +831,7 @@ function applyCapabilityFilters() {
     row.hidden = Boolean(
       (filters.category && row.dataset.capabilityCategory !== filters.category) ||
       (filters.maturity && row.dataset.capabilityMaturity !== filters.maturity) ||
-      (filters.claimability && row.dataset.capabilityClaimability !== filters.claimability)
+      (filters.confidence && row.dataset.capabilityConfidence !== filters.confidence)
     );
   });
 }
@@ -770,6 +840,7 @@ function openDetail(token) {
   const [type, id] = token.split(":");
   if (type === "product") return openProductDrawer(byId(state.project.products, id), false);
   if (type === "capability") return openCapabilityDrawer(byId(state.project.capabilities, id), false);
+  if (type === "design") return openDesignDrawer(byId(state.project.designElements, id), false);
   if (type === "gap") return openGapDrawer(byId(state.project.gaps, id), false);
   if (type === "candidate") return openCandidateDrawer(byId(state.project.roadmapCandidates, id), false);
   const map = {
@@ -795,12 +866,13 @@ function openDetail(token) {
 function openAdd(type) {
   if (type === "product") return openProductDrawer({ id: makeId("prod"), name: "New Product", status: "planned", description: "", notes: "", successorProductId: "" }, true);
   if (type === "capability") return openCapabilityDrawer({ id: makeId("cap"), name: "New Variation Point", category: "", description: "" }, true);
+  if (type === "design") return openDesignDrawer({ id: makeId("de"), name: "New Design Element", type: "hardware", owner: "", description: "" }, true);
   if (type === "targetNeed") return openCapabilityDrawer({ id: makeId("cap"), name: "New Target Need", category: "", description: "" }, true, "Target Need");
   if (type === "gap") return openGapDrawer({ id: makeId("gap"), title: "New Gap", targetCapabilityId: state.project.capabilities[0]?.id || "", variantId: state.project.variants[0]?.id || "", description: "", severity: "medium", businessImpact: "", technicalImpact: "", gapType: "evidence gap" }, true);
   if (type === "candidate") return openCandidateDrawer({ id: makeId("rc"), name: "New Roadmap Candidate", decisionStatus: "study", effort: "M", riskLevel: "medium", targetProductId: state.project.products[0]?.id || "", gapIds: [] }, true);
   const map = {
     variant: ["Variant", state.project.variants, variantFields(), { id: makeId("var"), productId: state.project.products[0]?.id || "", name: "New Variant", block: "Block TBD", status: "planned" }],
-    impact: ["Impact", state.project.impactAssessments, impactFields(), { id: makeId("imp"), severity: "medium", confidence: "low" }],
+    impact: ["Impact", state.project.impactAssessments, impactFields(), { id: makeId("imp"), roadmapCandidateId: state.project.roadmapCandidates[0]?.id || "", designElementId: state.project.designElements[0]?.id || "", impactType: "impact review", severity: "medium", confidence: "low", effort: "M" }],
     evidence: ["Evidence", state.project.evidence, evidenceFields(), { id: makeId("ev"), title: "New Evidence", type: "analysis", confidence: "medium", appliesTo: state.project.products[0]?.id || "" }],
     assumption: ["Assumption", state.project.assumptions, assumptionFields(), { id: makeId("asm"), confidence: "medium" }],
   };
@@ -944,8 +1016,65 @@ function openProductDrawer(product, isNew) {
   });
 }
 
+function openDesignDrawer(design, isNew) {
+  if (!design) return;
+  const linkedCapabilities = isNew ? [] : linkedCapabilitiesForDesign(design.id);
+  const linkedCapabilityIds = linkedCapabilities.map((item) => item.capability.id);
+  const impacts = isNew ? [] : state.project.impactAssessments.filter((impact) => impact.designElementId === design.id);
+  $("#drawerKicker").innerHTML = `${badge(design.type || "design")} <span class="drawer-type">Design Element</span>`;
+  $("#drawerTitle").textContent = design.name || "New Design Element";
+  $("#drawerBody").innerHTML = `
+    <form id="drawerForm" class="capability-drawer-form">
+      <section class="drawer-section">
+        <h3>Design Definition</h3>
+        <div class="form-grid">
+          ${input("name", "Design Element Name", design.name)}
+          ${select("type", "Type", ["hardware", "software", "firmware", "interface", "mechanical", "electrical", "verification", "other"], design.type || "hardware")}
+          ${input("owner", "Owner / Team", design.owner)}
+          ${textarea("description", "Description", design.description)}
+        </div>
+      </section>
+      <section class="drawer-section">
+        <h3>Linked Variation Points</h3>
+        ${capabilityCheckboxes("capabilityIds", "Variation Points That Can Impact This Design Element", linkedCapabilityIds)}
+      </section>
+      <section class="drawer-section">
+        <h3>Trace Summary</h3>
+        <ul class="drawer-list">
+          ${impacts.map((impact) => `<li><span>${esc(candidateName(impact.roadmapCandidateId))}<small>${esc(impact.impactType || "Impact")} · ${esc(impact.owner || design.owner || "No owner")}</small></span>${badge(impact.severity || "unknown")}</li>`).join("") || "<li><span>No roadmap impacts captured for this design element yet.</span></li>"}
+        </ul>
+      </section>
+    </form>
+  `;
+  $("#drawerFooter").innerHTML = `${isNew ? "" : `<button class="btn danger mr-auto" data-action="delete-design">Delete Design Element</button>`}<button class="btn secondary" data-action="close-drawer">Cancel</button><button class="btn primary" data-action="save-design">${isNew ? "Add Design Element" : "Save Design Element"}</button>`;
+  $("#drawer").classList.add("open", "capability-detail-drawer");
+  $("#drawer").setAttribute("aria-hidden", "false");
+  $("#drawerFooter [data-action='close-drawer']").addEventListener("click", closeDrawer);
+  const deleteButton = $("#drawerFooter [data-action='delete-design']");
+  if (deleteButton) deleteButton.addEventListener("click", () => {
+    if (!confirm(`Delete ${design.name}? This will remove its variation-point links and impact rows.`)) return;
+    deleteDesignElement(design.id);
+    markDirty();
+    render();
+    closeDrawer();
+    toast("Design element deleted.");
+  });
+  $("#drawerFooter [data-action='save-design']").addEventListener("click", () => {
+    const form = $("#drawerForm");
+    const values = Object.fromEntries(new FormData(form).entries());
+    Object.assign(design, { name: values.name, type: values.type, owner: values.owner, description: values.description });
+    if (isNew && !byId(state.project.designElements, design.id)) state.project.designElements.push(design);
+    syncDesignCapabilityLinks(design.id, new FormData(form).getAll("capabilityIds"));
+    markDirty();
+    render();
+    closeDrawer();
+    toast(isNew ? "Design element added." : "Design element updated.");
+  });
+}
+
 function openCandidateDrawer(candidate, isNew) {
   if (!candidate) return;
+  const suggestedImpacts = isNew ? [] : suggestedDesignImpactsForCandidate(candidate);
   $("#drawerKicker").innerHTML = `${badge(candidate.decisionStatus || "study")} <span class="drawer-type">Roadmap Candidate</span>`;
   $("#drawerTitle").textContent = candidate.name || "New Roadmap Candidate";
   $("#drawerBody").innerHTML = `
@@ -953,6 +1082,10 @@ function openCandidateDrawer(candidate, isNew) {
       ${candidateFields(candidate.id).map((field) => renderField(field, candidate[field.name] ?? (field.name === "gapId" ? candidate.gapIds?.[0] : ""))).join("")}
     </form>
     ${variationTraceGraphic({ candidate })}
+    <section class="drawer-section">
+      <h3>Suggested Design Impacts</h3>
+      ${suggestedImpacts.length ? `<ul class="drawer-list">${suggestedImpacts.map(({ link, design, existingImpact }) => `<li><span><strong>${esc(design.name)}</strong><small>${esc(link.impactType || "Impact review")} · ${esc(link.rationale || "Linked to the selected variation point.")}</small></span>${existingImpact ? badge("captured") : badge("missing")}</li>`).join("")}</ul><button class="btn primary full-width" type="button" data-action="create-suggested-impacts">Create Missing Impact Rows</button>` : `<div class="muted">Link this candidate to a gap whose variation point has design links to get impact suggestions.</div>`}
+    </section>
   `;
   $("#drawerFooter").innerHTML = `<button class="btn secondary" data-action="close-drawer">Cancel</button><button class="btn primary" data-action="save-candidate">${isNew ? "Add Candidate" : "Save Candidate"}</button>`;
   $("#drawer").classList.add("open", "trace-detail-drawer");
@@ -969,6 +1102,22 @@ function openCandidateDrawer(candidate, isNew) {
     closeDrawer();
     toast(isNew ? "Roadmap candidate added." : "Roadmap candidate updated.");
   });
+  const createImpactsButton = $("#drawerBody [data-action='create-suggested-impacts']");
+  if (createImpactsButton) createImpactsButton.addEventListener("click", () => {
+    const normalized = normalizeCandidateForm(Object.fromEntries(new FormData($("#drawerForm")).entries()));
+    Object.assign(candidate, normalized);
+    if (normalized.gapIds[0]) assignCandidateToGap(candidate.id, normalized.gapIds[0]);
+    const created = createMissingSuggestedImpacts(candidate);
+    markDirty();
+    if (!created) {
+      render();
+      openCandidateDrawer(candidate, false);
+      return toast("No missing impact rows to create.");
+    }
+    render();
+    openCandidateDrawer(candidate, false);
+    toast(`${created} impact row${created === 1 ? "" : "s"} created.`);
+  });
 }
 
 function openCapabilityDrawer(capability, isNew, contextLabel = "Variation Point") {
@@ -977,6 +1126,8 @@ function openCapabilityDrawer(capability, isNew, contextLabel = "Variation Point
   const focusProduct = byId(state.project.products, focusProductId);
   const focusClaim = isNew ? null : claimForProductCapability(focusProductId, capability.id);
   const linkedProductIds = isNew ? [] : productIdsForCapability(capability.id);
+  const linkedDesign = isNew ? [] : linkedDesignElementsForCapability(capability.id);
+  const linkedDesignIds = linkedDesign.map((item) => item.design.id);
   const claims = isNew ? [] : state.project.capabilityClaims.filter((claim) => claim.capabilityId === capability.id);
   const gaps = isNew ? [] : state.project.gaps.filter((gap) => gap.targetCapabilityId === capability.id);
   $("#drawerKicker").innerHTML = `${badge(capability.category || contextLabel.toLowerCase())} <span class="drawer-type">${esc(contextLabel)}</span>`;
@@ -996,16 +1147,21 @@ function openCapabilityDrawer(capability, isNew, contextLabel = "Variation Point
         <div class="support-link-grid">
           ${productCheckboxes("supportProductIds", `Products Associated With This ${contextLabel}`, linkedProductIds)}
           ${select("supportStatus", "Primary Status", ["supported", "partial", "not supported", "planned", "unknown"], focusClaim?.supportStatus || "unknown")}
-          ${select("maturity", "Evidence Maturity", ["verified", "demonstrated", "analysis", "simulation", "assumption", "unknown"], focusClaim?.maturity || "unknown")}
+          ${select("maturity", "Evidence Maturity", ["verified", "analysis", "simulation", "assumption", "unknown"], focusClaim?.maturity || "unknown")}
           ${select("confidence", "Confidence", ["low", "medium", "high"], focusClaim?.confidence || "medium")}
         </div>
         <button class="btn primary full-width" type="button" data-action="save-support-link">Save Product Links</button>
+      </section>
+      <section class="drawer-section">
+        <h3>Design Impact Links</h3>
+        ${designElementCheckboxes("designElementIds", `Design Elements Impacted By This ${contextLabel}`, linkedDesignIds)}
       </section>
       <section class="drawer-section">
         <h3>Trace Summary</h3>
         <div class="summary-panel">
           <div><span>Claims</span><strong>${claims.length}</strong></div>
           <div><span>Open Gaps</span><strong>${gaps.length}</strong></div>
+          <div><span>Design Links</span><strong>${linkedDesign.length}</strong></div>
           <div><span>Evidence</span><strong>${esc(capabilityEvidenceSummary(capability.id))}</strong></div>
         </div>
       </section>
@@ -1020,6 +1176,7 @@ function openCapabilityDrawer(capability, isNew, contextLabel = "Variation Point
     const values = Object.fromEntries(new FormData(form).entries());
     Object.assign(capability, { name: values.name, category: values.category, description: values.description });
     if (isNew && !byId(state.project.capabilities, capability.id)) state.project.capabilities.push(capability);
+    syncCapabilityDesignLinks(capability.id, new FormData(form).getAll("designElementIds"));
     const selectedProductIds = new FormData(form).getAll("supportProductIds");
     state.project.products.forEach((product) => {
       const existingClaim = claimForProductCapability(product.id, capability.id);
@@ -1054,6 +1211,7 @@ function openCapabilityDrawer(capability, isNew, contextLabel = "Variation Point
     const values = Object.fromEntries(new FormData($("#drawerForm")).entries());
     Object.assign(capability, { name: values.name, category: values.category, description: values.description });
     if (isNew && !byId(state.project.capabilities, capability.id)) state.project.capabilities.push(capability);
+    syncCapabilityDesignLinks(capability.id, new FormData($("#drawerForm")).getAll("designElementIds"));
     markDirty();
     render();
     closeDrawer();
@@ -1081,10 +1239,62 @@ function deleteCapability(capabilityId) {
   const gapIds = state.project.gaps.filter((gap) => gap.targetCapabilityId === capabilityId).map((gap) => gap.id);
   state.project.capabilities = state.project.capabilities.filter((capability) => capability.id !== capabilityId);
   state.project.capabilityClaims = state.project.capabilityClaims.filter((claim) => claim.capabilityId !== capabilityId);
+  state.project.capabilityDesignLinks = state.project.capabilityDesignLinks.filter((link) => link.capabilityId !== capabilityId);
   state.project.gaps = state.project.gaps.filter((gap) => gap.targetCapabilityId !== capabilityId);
   state.project.roadmapCandidates.forEach((candidate) => {
     candidate.gapIds = (candidate.gapIds || []).filter((id) => !gapIds.includes(id));
   });
+}
+
+function deleteDesignElement(designElementId) {
+  state.project.designElements = state.project.designElements.filter((design) => design.id !== designElementId);
+  state.project.capabilityDesignLinks = state.project.capabilityDesignLinks.filter((link) => link.designElementId !== designElementId);
+  state.project.impactAssessments = state.project.impactAssessments.filter((impact) => impact.designElementId !== designElementId);
+}
+
+function syncCapabilityDesignLinks(capabilityId, designElementIds) {
+  const selectedIds = new Set(designElementIds);
+  state.project.capabilityDesignLinks = state.project.capabilityDesignLinks.filter((link) => link.capabilityId !== capabilityId || selectedIds.has(link.designElementId));
+  designElementIds.forEach((designElementId) => {
+    const exists = state.project.capabilityDesignLinks.some((link) => link.capabilityId === capabilityId && link.designElementId === designElementId);
+    if (!exists) {
+      state.project.capabilityDesignLinks.push({ id: makeId("cdl"), capabilityId, designElementId, impactType: "impact review", rationale: "Review this design element when this variation point changes." });
+    }
+  });
+}
+
+function syncDesignCapabilityLinks(designElementId, capabilityIds) {
+  const selectedIds = new Set(capabilityIds);
+  state.project.capabilityDesignLinks = state.project.capabilityDesignLinks.filter((link) => link.designElementId !== designElementId || selectedIds.has(link.capabilityId));
+  capabilityIds.forEach((capabilityId) => {
+    const exists = state.project.capabilityDesignLinks.some((link) => link.capabilityId === capabilityId && link.designElementId === designElementId);
+    if (!exists) {
+      state.project.capabilityDesignLinks.push({ id: makeId("cdl"), capabilityId, designElementId, impactType: "impact review", rationale: "Review this design element when this variation point changes." });
+    }
+  });
+}
+
+function createMissingSuggestedImpacts(candidate) {
+  let created = 0;
+  suggestedDesignImpactsForCandidate(candidate).forEach(({ link, design, existingImpact }) => {
+    if (existingImpact) return;
+    state.project.impactAssessments.push({
+      id: makeId("imp"),
+      roadmapCandidateId: candidate.id,
+      designElementId: design.id,
+      impactType: link.impactType || "impact review",
+      severity: "medium",
+      confidence: "medium",
+      owner: design.owner || "",
+      effort: "M",
+      scheduleDriver: "",
+      verificationConsequence: "",
+      riskConsequence: "",
+      basis: link.rationale || `Suggested from ${capabilityName(link.capabilityId)} design link.`,
+    });
+    created += 1;
+  });
+  return created;
 }
 
 function normalizeCandidateForm(values) {
@@ -1126,6 +1336,8 @@ function renderField(field, value) {
   if (field.type === "select") return select(field.name, field.label, field.options, value);
   if (field.type === "product") return productSelect(field.name, field.label, value);
   if (field.type === "gap") return gapSelect(field.name, field.label, value, field.currentCandidateId || "");
+  if (field.type === "design") return designElementSelect(field.name, field.label, value);
+  if (field.type === "candidate") return roadmapCandidateSelect(field.name, field.label, value);
   if (field.type === "ids") return input(field.name, `${field.label} (comma-separated IDs)`, (value || []).join(", "));
   return input(field.name, field.label, value, field.type || "text");
 }
@@ -1159,12 +1371,38 @@ function candidateSelect(name, labelText, value = "", currentGapId = "") {
   });
   return `<label>${esc(labelText)}<select name="${esc(name)}"><option value="">No linked candidate</option>${options.map((candidate) => `<option value="${esc(candidate.id)}" ${candidate.id === value ? "selected" : ""}>${esc(candidate.name || candidate.id)}</option>`).join("")}</select></label>`;
 }
+function designElementSelect(name, labelText, value = "") {
+  return `<label>${esc(labelText)}<select name="${esc(name)}">${state.project.designElements.map((design) => `<option value="${esc(design.id)}" ${design.id === value ? "selected" : ""}>${esc(design.name)}</option>`).join("")}</select></label>`;
+}
+function roadmapCandidateSelect(name, labelText, value = "") {
+  return `<label>${esc(labelText)}<select name="${esc(name)}">${state.project.roadmapCandidates.map((candidate) => `<option value="${esc(candidate.id)}" ${candidate.id === value ? "selected" : ""}>${esc(candidate.name)}</option>`).join("")}</select></label>`;
+}
 function productCheckboxes(name, labelText, selectedIds = []) {
   return `
     <fieldset class="checkbox-field">
       <legend>${esc(labelText)}</legend>
       <div class="checkbox-list">
         ${state.project.products.map((product) => `<label><input type="checkbox" name="${esc(name)}" value="${esc(product.id)}" ${selectedIds.includes(product.id) ? "checked" : ""}> <span>${esc(product.name)}</span></label>`).join("")}
+      </div>
+    </fieldset>
+  `;
+}
+function capabilityCheckboxes(name, labelText, selectedIds = []) {
+  return `
+    <fieldset class="checkbox-field">
+      <legend>${esc(labelText)}</legend>
+      <div class="checkbox-list">
+        ${state.project.capabilities.map((capability) => `<label><input type="checkbox" name="${esc(name)}" value="${esc(capability.id)}" ${selectedIds.includes(capability.id) ? "checked" : ""}> <span>${esc(capability.name)}</span></label>`).join("") || `<span class="muted">No variation points yet.</span>`}
+      </div>
+    </fieldset>
+  `;
+}
+function designElementCheckboxes(name, labelText, selectedIds = []) {
+  return `
+    <fieldset class="checkbox-field">
+      <legend>${esc(labelText)}</legend>
+      <div class="checkbox-list">
+        ${state.project.designElements.map((design) => `<label><input type="checkbox" name="${esc(name)}" value="${esc(design.id)}" ${selectedIds.includes(design.id) ? "checked" : ""}> <span>${esc(design.name)}</span></label>`).join("") || `<span class="muted">No design elements yet. Add them from the Design Elements page.</span>`}
       </div>
     </fieldset>
   `;
@@ -1177,16 +1415,16 @@ function variantFields() {
   return [{ name: "id", label: "ID" }, { name: "productId", label: "Product ID" }, { name: "name", label: "Variant Name" }, { name: "block", label: "Block / Version" }, { name: "hardwareRevision", label: "Hardware Revision" }, { name: "softwareVersion", label: "Software/Firmware Version" }, selectField("status", "Status", ["retired", "current", "supported", "planned", "obsolete", "prototype"]), { name: "configurationNotes", label: "Configuration Notes", type: "textarea" }];
 }
 function claimFields() {
-  return [{ name: "id", label: "ID" }, { name: "variantId", label: "Variant ID" }, { name: "capabilityId", label: "Capability ID" }, selectField("supportStatus", "Support Status", ["supported", "partial", "not supported", "planned", "unknown"]), selectField("maturity", "Evidence Maturity", ["verified", "demonstrated", "analysis", "simulation", "assumption", "unknown"]), selectField("confidence", "Confidence", ["low", "medium", "high"]), { name: "evidenceIds", label: "Evidence IDs", type: "ids" }, { name: "bdCaveat", label: "BD Caveat" }, { name: "notes", label: "Notes", type: "textarea" }];
+  return [{ name: "id", label: "ID" }, { name: "variantId", label: "Variant ID" }, { name: "capabilityId", label: "Capability ID" }, selectField("supportStatus", "Support Status", ["supported", "partial", "not supported", "planned", "unknown"]), selectField("maturity", "Evidence Maturity", ["verified", "analysis", "simulation", "assumption", "unknown"]), selectField("confidence", "Confidence", ["low", "medium", "high"]), { name: "evidenceIds", label: "Evidence IDs", type: "ids" }, { name: "bdCaveat", label: "BD Caveat" }, { name: "notes", label: "Notes", type: "textarea" }];
 }
 function candidateFields(currentCandidateId = "") {
   return [{ name: "name", label: "Name" }, { name: "description", label: "Description", type: "textarea" }, { name: "driver", label: "Driving Need / Rationale" }, { name: "targetProductId", label: "Product", type: "product" }, { name: "gapId", label: "Gap Closed", type: "gap", currentCandidateId }, selectField("businessValue", "Business Value", ["low", "medium", "high"]), selectField("effort", "Effort", ["S", "M", "L", "XL"]), selectField("riskLevel", "Risk Level", ["low", "medium", "high"]), { name: "scheduleDrivers", label: "Schedule Drivers", type: "textarea" }, { name: "assumptions", label: "Assumptions", type: "textarea" }, selectField("decisionStatus", "Decision Status", ["include", "study", "defer", "reject", "blocked"])];
 }
 function impactFields() {
-  return [{ name: "id", label: "ID" }, { name: "roadmapCandidateId", label: "Roadmap Candidate ID" }, { name: "designElementId", label: "Design Element ID" }, { name: "impactType", label: "Impact Type" }, selectField("severity", "Severity", ["low", "medium", "high", "major redesign"]), selectField("confidence", "Confidence", ["low", "medium", "high"]), { name: "owner", label: "Owner / Team" }, { name: "effort", label: "Effort Range / Size" }, { name: "scheduleDriver", label: "Schedule Driver", type: "textarea" }, { name: "verificationConsequence", label: "Verification Consequence", type: "textarea" }, { name: "riskConsequence", label: "Risk Consequence", type: "textarea" }, { name: "basis", label: "Basis of Estimate", type: "textarea" }];
+  return [{ name: "id", label: "ID" }, { name: "roadmapCandidateId", label: "Roadmap Candidate", type: "candidate" }, { name: "designElementId", label: "Design Element", type: "design" }, { name: "impactType", label: "Impact Type" }, selectField("severity", "Severity", ["low", "medium", "high", "major redesign"]), selectField("confidence", "Confidence", ["low", "medium", "high"]), { name: "owner", label: "Owner / Team" }, { name: "effort", label: "Effort Range / Size" }, { name: "scheduleDriver", label: "Schedule Driver", type: "textarea" }, { name: "verificationConsequence", label: "Verification Consequence", type: "textarea" }, { name: "riskConsequence", label: "Risk Consequence", type: "textarea" }, { name: "basis", label: "Basis of Estimate", type: "textarea" }];
 }
 function evidenceFields() {
-  return [{ name: "title", label: "Evidence Title" }, selectField("type", "Evidence Type", ["verified", "demonstrated", "analysis", "simulation", "similarity", "assumption", "unknown"]), { name: "reference", label: "Source / Reference" }, { name: "appliesTo", label: "Applies To Product", type: "product" }, { name: "summary", label: "Summary", type: "textarea" }, selectField("confidence", "Confidence", ["low", "medium", "high"]) ];
+  return [{ name: "title", label: "Evidence Title" }, selectField("type", "Evidence Type", ["verified", "analysis", "simulation", "similarity", "assumption", "unknown"]), { name: "reference", label: "Source / Reference" }, { name: "appliesTo", label: "Applies To Product", type: "product" }, { name: "summary", label: "Summary", type: "textarea" }, selectField("confidence", "Confidence", ["low", "medium", "high"]) ];
 }
 function decisionFields() {
   return [{ name: "title", label: "Decision Title" }, { name: "date", label: "Decision Date", type: "date" }, { name: "owner", label: "Owner / Approver" }, { name: "optionsConsidered", label: "Options Considered", type: "textarea" }, { name: "selectedOption", label: "Selected Option" }, { name: "rejectedOptions", label: "Rejected / Deferred Options", type: "textarea" }, { name: "rationale", label: "Rationale", type: "textarea" }, { name: "assumptions", label: "Key Assumptions", type: "textarea" }, { name: "risksAccepted", label: "Risks Accepted", type: "textarea" }, { name: "supportingEvidenceIds", label: "Supporting Evidence IDs", type: "ids" }];
@@ -1242,6 +1480,12 @@ function toast(message) {
 }
 
 document.addEventListener("click", (event) => {
+  const drawer = $("#drawer");
+  const drawerIsOpen = drawer.classList.contains("open");
+  const clickedInsideDrawer = drawer.contains(event.target);
+  const opensDrawer = event.target.closest("[data-detail], [data-row-detail], [data-add]");
+  if (drawerIsOpen && !clickedInsideDrawer && !opensDrawer) closeDrawer();
+
   const action = event.target.closest("[data-action]")?.dataset.action;
   if (!action) return;
   if (action === "open-file") $("#fileInput").click();
