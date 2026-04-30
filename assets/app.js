@@ -10,6 +10,7 @@ const navItems = [
   ["design", "Design Elements", "grid"],
   ["constraints", "Constraints", "alert"],
   ["gaps", "Gap Analysis", "split"],
+  ["trace", "Trace View", "route"],
   ["candidates", "Roadmap Candidates", "route"],
   ["impacts", "Impact Analysis", "bars"],
   ["evidence", "Evidence & Maturity", "doc"],
@@ -104,6 +105,7 @@ function sampleProject() {
     { id: "var_product_3_b3", productId: "prod_product_3", name: "Planned Baseline", block: "Product 3.0", hardwareRevision: "HW Rev C", softwareVersion: "SW 3.0", status: "planned", configurationNotes: "Planned future baseline." },
   ];
   p.capabilities = [
+    { id: "cap_satcom_large_reflector", recordType: "targetNeed", name: "SATCOM Large-Reflector Compatibility", category: "target need", marketSegment: "SATCOM", stakeholder: "Customer Segment", satisfactionStatus: "not met", satisfiedProductIds: [], linkedCapabilityIds: ["cap_performance_envelope"], description: "Support customer segments that require compatibility with larger reflector configurations." },
     { id: "cap_remote_update", name: "Secure Remote Update", category: "Software Feature", description: "Support secure remote software update workflow." },
     { id: "cap_diag", name: "Automated Fault Isolation", category: "Diagnostics", description: "Localize field faults without SME intervention." },
     { id: "cap_rx_band", name: "RX Band Coverage", category: "RF Capability", description: "Receive supported mission bands within the required sensitivity and selectivity envelope." },
@@ -146,9 +148,10 @@ function sampleProject() {
     { id: "cdl_rx_band_rf_front_end", capabilityId: "cap_rx_band", designElementId: "de_rf_front_end", impactType: "RF chain compatibility", rationale: "RX band changes can affect filtering, LNA selection, switching, and calibration." },
     { id: "cdl_remote_update_control", capabilityId: "cap_remote_update", designElementId: "de_control_module", impactType: "firmware resource margin", rationale: "Secure update workflows depend on controller memory, boot flow, and security hooks." },
     { id: "cdl_diag_service", capabilityId: "cap_diag", designElementId: "de_diag", impactType: "software function", rationale: "Diagnostic capability changes map directly to the diagnostic service." },
+    { id: "cdl_performance_antenna", capabilityId: "cap_performance_envelope", designElementId: "de_antenna", impactType: "reflector-dependent performance", rationale: "Large-reflector compatibility depends on antenna assembly and validated performance envelope." },
   ];
   p.constraints = [
-    { id: "con_reflector_limit", name: "Reflector Size Operating Limit", description: "Current active baseline is not assessed for reflectors larger than the validated envelope.", productIds: ["prod_product_2"], limitType: "physical", limitValue: "Reflector diameter <= validated envelope", basis: "SME assessment pending verification evidence.", severity: "major caveat", workaround: "Route larger-reflector opportunities to planned product assessment.", relatedTargetNeedIds: [], relatedCapabilityIds: ["cap_performance_envelope"], evidenceIds: [] },
+    { id: "con_reflector_limit", name: "Reflector Size Operating Limit", description: "Current active baseline is not assessed for reflectors larger than the validated envelope.", productIds: ["prod_product_2"], limitType: "physical", limitValue: "Reflector diameter <= validated envelope", basis: "SME assessment pending verification evidence.", severity: "major caveat", workaround: "Route larger-reflector opportunities to planned product assessment.", relatedTargetNeedIds: ["cap_satcom_large_reflector"], relatedCapabilityIds: ["cap_performance_envelope"], evidenceIds: [] },
   ];
   p.impactAssessments = [
     { id: "imp_001", roadmapCandidateId: "rc_048", designElementId: "de_control_module", impactType: "resource margin", severity: "major redesign", confidence: "low", owner: "Firmware", effort: "L-XL", scheduleDriver: "controller utilization estimate", verificationConsequence: "New regression and verification demo required.", riskConsequence: "May force hardware respin.", basis: "SME judgment from similar effort." },
@@ -209,6 +212,7 @@ function render() {
     design: renderDesignElements,
     constraints: renderConstraints,
     gaps: renderGaps,
+    trace: renderTraceView,
     candidates: renderCandidates,
     impacts: renderImpacts,
     evidence: renderEvidence,
@@ -358,8 +362,9 @@ function renderCapabilities() {
   const p = state.project;
   const selectedProductId = selectedCapabilityProductId();
   const selectedProduct = byId(p.products, selectedProductId);
-  const categories = [...new Set(p.capabilities.map((cap) => cap.category).filter(Boolean))];
-  const rows = p.capabilities.map((cap) => {
+  const variationPoints = p.capabilities.filter((cap) => !isTargetNeedCapability(cap));
+  const categories = [...new Set(variationPoints.map((cap) => cap.category).filter(Boolean))];
+  const rows = variationPoints.map((cap) => {
     const claim = claimForProductCapability(selectedProductId, cap.id);
     const linkedDesign = linkedDesignElementsForCapability(cap.id);
     const supportStatus = claim?.supportStatus || "unassigned";
@@ -651,6 +656,115 @@ function renderGaps() {
   `;
 }
 
+function renderTraceView() {
+  const needs = traceNeeds();
+  const selectedNeedId = selectedTraceNeedId(needs);
+  const selectedNeed = byId(state.project.capabilities, selectedNeedId) || needs[0];
+  const trace = selectedNeed ? traceRowsForNeed(selectedNeed) : [];
+  const variationCount = new Set(trace.map((row) => row.capability?.id).filter(Boolean)).size;
+  const designCount = new Set(trace.map((row) => row.design?.id).filter(Boolean)).size;
+  const productCount = new Set(trace.map((row) => row.product?.id).filter(Boolean)).size;
+
+  return `
+    ${pageHeader("Trace View", "Follow a target need into variation points, design elements, and products so the planning story is visible end to end.")}
+    <section class="filters trace-filters">
+      <label class="filter">Starting Need
+        <select data-trace-need>
+          ${needs.map((need) => `<option value="${esc(need.id)}" ${need.id === selectedNeedId ? "selected" : ""}>${esc(need.name)}</option>`).join("")}
+        </select>
+      </label>
+      <div class="trace-legend">
+        <span><i class="trace-dot need"></i>Need</span>
+        <span><i class="trace-dot variation"></i>Variation Point</span>
+        <span><i class="trace-dot design"></i>Design Element</span>
+        <span><i class="trace-dot product"></i>Product</span>
+      </div>
+    </section>
+    ${selectedNeed ? `
+      <section class="summary-grid">
+        ${metric("Variation Points", variationCount, "Linked capabilities")}
+        ${metric("Design Elements", designCount, "Impacted architecture")}
+        ${metric("Products", productCount, "Claimed or planned products")}
+        ${metric("Trace Paths", trace.length, "Visible branches")}
+      </section>
+      ${traceDiagram(selectedNeed, trace)}
+    ` : empty("No target needs or gap-driving capabilities are available yet. Add a target need or gap to begin tracing.")}
+  `;
+}
+
+function traceDiagram(need, rows) {
+  const rootMeta = [
+    need.marketSegment,
+    need.stakeholder,
+    isTargetNeedCapability(need) ? title(need.satisfactionStatus || "unassessed") : "Gap-driving capability",
+  ].filter(Boolean).join(" | ");
+
+  return `
+    <section class="trace-board" style="--trace-rows: ${Math.max(rows.length, 1)};">
+      <div class="trace-root">
+        ${traceNode({
+          kind: "need",
+          label: "Need",
+          titleText: need.name,
+          meta: rootMeta || need.description || "Starting point",
+          detail: `capability:${need.id}`,
+        })}
+      </div>
+      <div class="trace-paths">
+        <div class="trace-column-labels">
+          <span>Variation Point</span>
+          <span>Design Element</span>
+          <span>Product</span>
+        </div>
+        ${rows.map((row) => `
+          <div class="trace-path-row">
+            <div class="trace-branch-line"></div>
+            ${traceNode({
+              kind: "variation",
+              label: "Variation Point",
+              titleText: row.capability?.name || "No variation point linked",
+              meta: row.capability ? row.capability.category || row.capability.description || "Capability" : "Link a variation point from the target need.",
+              detail: row.capability ? `capability:${row.capability.id}` : "",
+              muted: !row.capability,
+            })}
+            <div class="trace-connector"></div>
+            ${traceNode({
+              kind: "design",
+              label: "Design Element",
+              titleText: row.design?.name || "No design element linked",
+              meta: row.design ? [row.design.type, row.design.owner].filter(Boolean).join(" | ") || row.link?.impactType || "Design impact" : "Link design elements from the variation point.",
+              detail: row.design ? `design:${row.design.id}` : "",
+              muted: !row.design,
+            })}
+            <div class="trace-connector"></div>
+            ${traceNode({
+              kind: "product",
+              label: "Product",
+              titleText: row.product?.name || "No product claim linked",
+              meta: row.product ? `${title(row.claim?.supportStatus || row.product.status || "unknown")} | ${title(row.claim?.maturity || "unknown")} evidence` : "Add a product support claim for this variation point.",
+              productId: row.product?.id || "",
+              muted: !row.product,
+            })}
+          </div>
+        `).join("") || `<div class="trace-empty-path">${empty("This need has no trace links yet.")}</div>`}
+      </div>
+    </section>
+  `;
+}
+
+function traceNode({ kind, label, titleText, meta = "", detail = "", productId = "", muted = false }) {
+  const action = productId ? `data-product-page="${esc(productId)}"` : detail ? `data-detail="${esc(detail)}"` : "";
+  const tag = action ? "button" : "div";
+  const typeAttr = tag === "button" ? ` type="button"` : "";
+  return `
+    <${tag} class="trace-map-node ${esc(kind)}${muted ? " muted-node" : ""}" ${action}${typeAttr}>
+      <span>${esc(label)}</span>
+      <strong>${esc(titleText)}</strong>
+      <small>${esc(meta || "-")}</small>
+    </${tag}>
+  `;
+}
+
 function renderCandidates() {
   const p = state.project;
   return `
@@ -827,6 +941,9 @@ function targetNeedsAddressedByProduct(productId) {
 function constraintsForProduct(productId) {
   return state.project.constraints.filter((constraint) => (constraint.productIds || []).includes(productId));
 }
+function targetNeedConstraints(targetNeedId) {
+  return state.project.constraints.filter((constraint) => (constraint.relatedTargetNeedIds || []).includes(targetNeedId));
+}
 function productVariants(productId) { return state.project.variants.filter((variant) => variant.productId === productId); }
 function capabilityName(id) { return byId(state.project.capabilities, id)?.name || id || "Unknown variation point"; }
 function capabilityNames(ids, fallback = "None") {
@@ -856,6 +973,52 @@ function targetNeedIdsForGapAnalysis() {
   const explicitTargetNeedIds = state.project.capabilities.filter(isTargetNeedCapability).map((capability) => capability.id);
   const linkedTargetNeedIds = state.project.gaps.map((gap) => gap.targetCapabilityId).filter(Boolean);
   return [...new Set([...explicitTargetNeedIds, ...linkedTargetNeedIds])];
+}
+function traceNeeds() {
+  return targetNeedIdsForGapAnalysis()
+    .map((id) => byId(state.project.capabilities, id))
+    .filter(Boolean);
+}
+function selectedTraceNeedId(needs = traceNeeds()) {
+  const storedId = state.project.viewSettings.traceNeedId;
+  if (needs.some((need) => need.id === storedId)) return storedId;
+  return needs[0]?.id || "";
+}
+function variationPointsForTraceNeed(need) {
+  if (!need) return [];
+  const linkedIds = isTargetNeedCapability(need) ? (need.linkedCapabilityIds || []) : [];
+  const ids = linkedIds.length ? linkedIds : [need.id];
+  return [...new Set(ids)]
+    .map((id) => byId(state.project.capabilities, id))
+    .filter(Boolean)
+    .filter((capability) => capability.id === need.id || !isTargetNeedCapability(capability));
+}
+function traceProductsForCapability(capabilityId) {
+  const byProductId = new Map();
+  state.project.capabilityClaims
+    .filter((claim) => claim.capabilityId === capabilityId)
+    .forEach((claim) => {
+      const variant = byId(state.project.variants, claim.variantId);
+      const product = byId(state.project.products, variant?.productId);
+      if (!product || byProductId.has(product.id)) return;
+      byProductId.set(product.id, { product, claim });
+    });
+  return [...byProductId.values()];
+}
+function traceRowsForNeed(need) {
+  const rows = [];
+  variationPointsForTraceNeed(need).forEach((capability) => {
+    const designLinks = linkedDesignElementsForCapability(capability.id);
+    const products = traceProductsForCapability(capability.id);
+    const designs = designLinks.length ? designLinks : [{ link: null, design: null }];
+    const productLinks = products.length ? products : [{ product: null, claim: null }];
+    designs.forEach(({ link, design }) => {
+      productLinks.forEach(({ product, claim }) => {
+        rows.push({ capability, link, design, product, claim });
+      });
+    });
+  });
+  return rows;
 }
 function candidateName(id) { return byId(state.project.roadmapCandidates, id)?.name || id || "Unknown candidate"; }
 function designElementName(id) { return byId(state.project.designElements, id)?.name || id || "Unknown design element"; }
@@ -1056,6 +1219,12 @@ function bindContentActions() {
       render();
     });
   });
+  $("#content").querySelectorAll("[data-trace-need]").forEach((selectEl) => {
+    selectEl.addEventListener("change", () => {
+      state.project.viewSettings.traceNeedId = selectEl.value;
+      render();
+    });
+  });
   $("#content").querySelectorAll("[data-capability-filter]").forEach((selectEl) => selectEl.addEventListener("change", applyCapabilityFilters));
   $("#content").querySelectorAll("[data-capability-group-toggle]").forEach((button) => {
     button.addEventListener("click", () => {
@@ -1099,6 +1268,10 @@ function highlightSelectedRows() {
 
 async function openDetail(token) {
   if ($("#drawer").classList.contains("open")) {
+    if (state.selectedDetail === token) {
+      await closeDrawer();
+      return;
+    }
     const closed = await closeDrawer();
     if (!closed) return;
   }
@@ -1117,7 +1290,6 @@ async function openDetail(token) {
   if (type === "candidate") return openCandidateDrawer(byId(state.project.roadmapCandidates, id), false);
   const map = {
     variant: ["Variant", state.project.variants, variantFields(), null, () => deleteVariant(record.id), "This will also remove linked capability claims and gaps for this variant."],
-    constraint: ["Constraint", state.project.constraints, constraintFields(), null, () => state.project.constraints = state.project.constraints.filter((constraint) => constraint.id !== record.id), "This will remove the operating limit record but not linked products, needs, variation points, or evidence."],
     claim: ["Capability Claim", state.project.capabilityClaims, claimFields()],
     impact: ["Impact", state.project.impactAssessments, impactFields()],
     evidence: ["Evidence", state.project.evidence, evidenceFields()],
@@ -1125,6 +1297,7 @@ async function openDetail(token) {
     assumption: ["Assumption", state.project.assumptions, assumptionFields()],
   };
   const [label, collection, fields, normalize, onDelete, deleteMessage] = map[type] || [];
+  if (type === "constraint") return openConstraintDrawer(byId(state.project.constraints, id), false);
   const record = byId(collection, id);
   if (!record) return;
   openForm(label, record.name || record.title || record.id, record, fields, (values) => {
@@ -1157,9 +1330,9 @@ async function openAdd(type) {
   if (type === "targetNeed") return openCapabilityDrawer({ id: makeId("cap"), recordType: "targetNeed", name: "New Target Need", category: "target need", marketSegment: "", stakeholder: "", satisfactionStatus: "unassessed", satisfiedProductIds: [], linkedCapabilityIds: [], description: "" }, true, "Target Need");
   if (type === "gap") return openGapDrawer({ id: makeId("gap"), title: "New Gap", targetCapabilityId: state.project.capabilities[0]?.id || "", variantId: state.project.variants[0]?.id || "", description: "", severity: "medium", businessImpact: "", technicalImpact: "", gapType: "evidence gap" }, true);
   if (type === "candidate") return openCandidateDrawer({ id: makeId("rc"), name: "New Roadmap Candidate", decisionStatus: "study", effort: "M", riskLevel: "medium", targetProductId: state.project.products[0]?.id || "", gapIds: [] }, true);
+  if (type === "constraint") return openConstraintDrawer({ id: makeId("con"), name: "New Constraint", description: "", productIds: [], limitType: "operational", limitValue: "", basis: "", severity: "major caveat", workaround: "", relatedTargetNeedIds: [], relatedCapabilityIds: [], evidenceIds: [] }, true);
   const map = {
     variant: ["Variant", state.project.variants, variantFields(), { id: makeId("var"), productId: state.project.products[0]?.id || "", name: "New Variant", block: "Block TBD", status: "planned" }],
-    constraint: ["Constraint", state.project.constraints, constraintFields(), { id: makeId("con"), name: "New Constraint", description: "", productIds: [], limitType: "operational", limitValue: "", basis: "", severity: "major caveat", workaround: "", relatedTargetNeedIds: [], relatedCapabilityIds: [], evidenceIds: [] }],
     impact: ["Impact", state.project.impactAssessments, impactFields(), { id: makeId("imp"), roadmapCandidateId: state.project.roadmapCandidates[0]?.id || "", designElementId: state.project.designElements[0]?.id || "", impactType: "impact review", severity: "medium", confidence: "low", effort: "M" }],
     evidence: ["Evidence", state.project.evidence, evidenceFields(), { id: makeId("ev"), title: "New Evidence", type: "analysis", confidence: "medium", appliesTo: state.project.products[0]?.id || "" }],
     assumption: ["Assumption", state.project.assumptions, assumptionFields(), { id: makeId("asm"), confidence: "medium" }],
@@ -1172,6 +1345,33 @@ async function openAdd(type) {
     closeDrawer();
     toast(`${label} added.`);
   }, { isNew: true, createText: `Create ${label}`, draftLabel: label });
+}
+
+function openConstraintDrawer(constraint, isNew) {
+  if (!constraint) return;
+  openForm(isNew ? "Add Constraint" : "Constraint", constraint.name || constraint.id, constraint, constraintFields(), (values) => {
+    Object.assign(constraint, values);
+    if (isNew && !byId(state.project.constraints, constraint.id)) state.project.constraints.push(constraint);
+    markDirty();
+    render();
+    closeDrawer();
+    toast(`Constraint ${isNew ? "added" : "updated"}.`);
+  }, {
+    isNew,
+    createText: isNew ? "Create Constraint" : "Save",
+    draftLabel: "Constraint",
+    ...(!isNew ? {
+      deleteText: "Delete Constraint",
+      deleteMessage: "This will remove the operating limit record but not linked products, needs, variation points, or evidence.",
+      onDelete: () => {
+        state.project.constraints = state.project.constraints.filter((item) => item.id !== constraint.id);
+        markDirty();
+        render();
+        closeDrawer();
+        toast("Constraint deleted.");
+      },
+    } : {}),
+  });
 }
 
 function openGapDrawer(gap, isNew) {
@@ -1504,6 +1704,11 @@ function openCapabilityDrawer(capability, isNew, contextLabel = "Variation Point
         ${variationPointCheckboxes("linkedCapabilityIds", "Variation Points That Satisfy Or Drive This Need", capability.linkedCapabilityIds || [])}
         <button class="btn primary full-width" type="button" data-action="create-linked-capability">Create Linked Variation Point</button>
       </section>` : ""}
+      ${isTargetNeed ? `<section class="drawer-section">
+        <h3>Constraints / Operating Limits</h3>
+        ${targetNeedConstraints(capability.id).length ? `<ul class="drawer-list">${targetNeedConstraints(capability.id).map((constraint) => `<li><button class="link-button" type="button" data-detail="constraint:${esc(constraint.id)}">${esc(constraint.name)}</button><span>${badge(constraint.severity || "major caveat")}</span></li>`).join("")}</ul>` : `<div class="muted">No constraints linked to this target need yet.</div>`}
+        <button class="btn secondary full-width" type="button" data-action="create-linked-constraint">Create Linked Constraint</button>
+      </section>` : ""}
       ${isTargetNeed ? "" : `<section class="drawer-section status-panel">
         <h3>Product Support / Evidence</h3>
         <div class="support-link-grid">
@@ -1604,6 +1809,28 @@ function openCapabilityDrawer(capability, isNew, contextLabel = "Variation Point
       description: capability.description || "",
     };
     openCapabilityDrawer(linkedCapability, true, "Variation Point", { referenceTargetNeedId: capability.id });
+  });
+  const createLinkedConstraintButton = $("#drawerBody [data-action='create-linked-constraint']");
+  if (createLinkedConstraintButton) createLinkedConstraintButton.addEventListener("click", () => {
+    saveCapabilityForm();
+    state.drawerBeforeClose = null;
+    state.drawerCloseGuard = null;
+    const linkedConstraint = {
+      id: makeId("con"),
+      name: capability.name && capability.name !== "New Target Need" ? `${capability.name} Constraint` : "New Constraint",
+      description: capability.description || "",
+      productIds: [],
+      limitType: "operational",
+      limitValue: "",
+      basis: "",
+      severity: capability.satisfactionStatus === "not met" ? "blocker" : "major caveat",
+      workaround: "",
+      relatedTargetNeedIds: [capability.id],
+      relatedCapabilityIds: capability.linkedCapabilityIds || [],
+      evidenceIds: [],
+    };
+    state.selectedDetail = `constraint:${linkedConstraint.id}`;
+    openConstraintDrawer(linkedConstraint, true);
   });
   const createButton = $("#drawerFooter [data-action='create-capability']");
   if (createButton) createButton.addEventListener("click", () => {
@@ -1863,11 +2090,12 @@ function productCoverageList(items = []) {
   `;
 }
 function capabilityCheckboxes(name, labelText, selectedIds = []) {
+  const capabilities = state.project.capabilities.filter((capability) => !isTargetNeedCapability(capability));
   return `
     <fieldset class="checkbox-field">
       <legend>${esc(labelText)}</legend>
       <div class="checkbox-list">
-        ${state.project.capabilities.map((capability) => `<label><input type="checkbox" name="${esc(name)}" value="${esc(capability.id)}" ${selectedIds.includes(capability.id) ? "checked" : ""}> <span>${esc(capability.name)}</span></label>`).join("") || `<span class="muted">No variation points yet.</span>`}
+        ${capabilities.map((capability) => `<label><input type="checkbox" name="${esc(name)}" value="${esc(capability.id)}" ${selectedIds.includes(capability.id) ? "checked" : ""}> <span>${esc(capability.name)}</span></label>`).join("") || `<span class="muted">No variation points yet.</span>`}
       </div>
     </fieldset>
   `;
@@ -2071,6 +2299,8 @@ async function closeDrawer({ force = false } = {}) {
   if (beforeClose) beforeClose();
   $("#drawer").classList.remove("open", "product-detail-drawer", "capability-detail-drawer", "trace-detail-drawer", "autosave-detail-drawer");
   $("#drawer").setAttribute("aria-hidden", "true");
+  state.selectedDetail = "";
+  highlightSelectedRows();
   return true;
 }
 

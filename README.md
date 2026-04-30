@@ -1,6 +1,6 @@
 # Product-Line Roadmap Decision Tool
 
-Local-first static browser app for product-line variation points, constraints, gaps, roadmap candidates, impacts, evidence, assumptions, and export planning.
+Local-first static browser app for product-line variation points, constraints, trace views, gaps, roadmap candidates, impacts, evidence, assumptions, and export planning.
 
 ## Run
 
@@ -14,7 +14,7 @@ No server, database, package install, telemetry, or internet connection is requi
 ## Workflow
 
 1. Open a `.plroadmap.json` snapshot, start from the sample project, or create a blank project.
-2. Review products, variation points, constraints / operating limits, gaps, roadmap candidates, impacts, evidence, and assumptions.
+2. Review products, variation points, constraints / operating limits, trace views, gaps, roadmap candidates, impacts, evidence, and assumptions.
 3. Edit records through the right-side detail drawer.
 4. Use **Save Snapshot** to export a new `.plroadmap.json` file, then use **Open** later to import that same snapshot.
 

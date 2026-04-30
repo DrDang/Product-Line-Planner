@@ -87,6 +87,20 @@
   ],
   "capabilities": [
     {
+      "id": "cap_satcom_large_reflector",
+      "recordType": "targetNeed",
+      "name": "SATCOM Large-Reflector Compatibility",
+      "category": "target need",
+      "marketSegment": "SATCOM",
+      "stakeholder": "Customer Segment",
+      "satisfactionStatus": "not met",
+      "satisfiedProductIds": [],
+      "linkedCapabilityIds": [
+        "cap_performance_envelope"
+      ],
+      "description": "Support customer segments that require compatibility with larger reflector configurations."
+    },
+    {
       "id": "cap_remote_update",
       "name": "Secure Remote Update",
       "category": "Software Feature",
@@ -103,6 +117,12 @@
       "name": "RX Band Coverage",
       "category": "RF Capability",
       "description": "Receive supported mission bands within the required sensitivity and selectivity envelope."
+    },
+    {
+      "id": "cap_performance_envelope",
+      "name": "Performance Envelope",
+      "category": "Performance",
+      "description": "Meet the target performance envelope for a future product."
     }
   ],
   "capabilityClaims": [
@@ -152,6 +172,17 @@
       "evidenceIds": [],
       "bdCaveat": "Requires antenna and RF front-end impact review.",
       "notes": "Target band expansion under study."
+    },
+    {
+      "id": "claim_product_3_performance",
+      "variantId": "var_product_3_b3",
+      "capabilityId": "cap_performance_envelope",
+      "supportStatus": "planned",
+      "maturity": "unknown",
+      "confidence": "low",
+      "evidenceIds": [],
+      "bdCaveat": "Do not promise.",
+      "notes": "Planned architecture not assessed for larger reflector configurations."
     }
   ],
   "evidence": [
@@ -269,6 +300,13 @@
       "designElementId": "de_control_module",
       "impactType": "firmware resource margin",
       "rationale": "Secure update workflows depend on controller memory, boot flow, and security hooks."
+    },
+    {
+      "id": "cdl_performance_antenna",
+      "capabilityId": "cap_performance_envelope",
+      "designElementId": "de_antenna",
+      "impactType": "reflector-dependent performance",
+      "rationale": "Large-reflector compatibility depends on antenna assembly and validated performance envelope."
     }
   ],
   "constraints": [
@@ -284,7 +322,9 @@
       "basis": "SME assessment pending verification evidence.",
       "severity": "major caveat",
       "workaround": "Route larger-reflector opportunities to planned product assessment.",
-      "relatedTargetNeedIds": [],
+      "relatedTargetNeedIds": [
+        "cap_satcom_large_reflector"
+      ],
       "relatedCapabilityIds": [
         "cap_performance_envelope"
       ],
