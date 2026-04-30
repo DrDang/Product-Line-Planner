@@ -110,7 +110,7 @@
       "id": "claim_product_1_remote_update",
       "variantId": "var_product_1_b1",
       "capabilityId": "cap_remote_update",
-      "supportStatus": "partial",
+      "supportStatus": "not supported",
       "value": "baseline update workflow demo",
       "maturity": "verified",
       "confidence": "medium",
@@ -269,6 +269,26 @@
       "designElementId": "de_control_module",
       "impactType": "firmware resource margin",
       "rationale": "Secure update workflows depend on controller memory, boot flow, and security hooks."
+    }
+  ],
+  "constraints": [
+    {
+      "id": "con_reflector_limit",
+      "name": "Reflector Size Operating Limit",
+      "description": "Current active baseline is not assessed for reflectors larger than the validated envelope.",
+      "productIds": [
+        "prod_product_2"
+      ],
+      "limitType": "physical",
+      "limitValue": "Reflector diameter <= validated envelope",
+      "basis": "SME assessment pending verification evidence.",
+      "severity": "major caveat",
+      "workaround": "Route larger-reflector opportunities to planned product assessment.",
+      "relatedTargetNeedIds": [],
+      "relatedCapabilityIds": [
+        "cap_performance_envelope"
+      ],
+      "evidenceIds": []
     }
   ],
   "interfaces": [],
