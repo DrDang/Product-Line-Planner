@@ -285,6 +285,28 @@ textarea { min-height: 82px; resize: vertical; }
 .product-variation-card .capability-section-stack {
   margin-top: 8px;
 }
+.block-upgrade-board {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+.block-upgrade-card {
+  display: grid;
+  gap: 12px;
+}
+.block-upgrade-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+.block-upgrade-header p {
+  margin: 4px 0 0;
+  color: var(--on-variant);
+}
+.block-summary {
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
 
 .baseline-roadmap {
   margin-top: 24px;
@@ -604,9 +626,13 @@ button.trace-map-node:hover {
   color: var(--on-surface);
   text-align: left;
 }
-.capability-section[data-capability-section="supported-planned"] .capability-section-toggle {
+.capability-section[data-capability-section="supported"] .capability-section-toggle {
   border-color: #86efac;
   background: #ecfdf3;
+}
+.capability-section[data-capability-section="planned"] .capability-section-toggle {
+  border-color: #c4b5fd;
+  background: #f5f3ff;
 }
 .capability-section[data-capability-section="not-supported"] .capability-section-toggle {
   border-color: #fca5a5;
@@ -616,8 +642,11 @@ button.trace-map-node:hover {
   border-color: #cbd5e1;
   background: #f8fafc;
 }
-.capability-section[data-capability-section="supported-planned"] .capability-page-table {
+.capability-section[data-capability-section="supported"] .capability-page-table {
   border-color: #86efac;
+}
+.capability-section[data-capability-section="planned"] .capability-page-table {
+  border-color: #c4b5fd;
 }
 .capability-section[data-capability-section="not-supported"] .capability-page-table {
   border-color: #fca5a5;
@@ -625,8 +654,11 @@ button.trace-map-node:hover {
 .capability-section[data-capability-section="unassigned-unknown"] .capability-page-table {
   border-color: #cbd5e1;
 }
-.capability-section[data-capability-section="supported-planned"] .capability-table th {
+.capability-section[data-capability-section="supported"] .capability-table th {
   background: #dcfce7;
+}
+.capability-section[data-capability-section="planned"] .capability-table th {
+  background: #ede9fe;
 }
 .capability-section[data-capability-section="not-supported"] .capability-table th {
   background: #ffdad6;

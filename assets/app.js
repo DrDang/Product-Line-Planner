@@ -1,6 +1,6 @@
 "use strict";
 
-const SCHEMA_VERSION = "0.2.0";
+const SCHEMA_VERSION = "0.3.0";
 const nowIso = () => new Date().toISOString();
 
 const navItems = [
@@ -9,9 +9,10 @@ const navItems = [
   ["matrix", "Variation Points", "layers"],
   ["design", "Design Elements", "grid"],
   ["constraints", "Constraints", "alert"],
-  ["gaps", "Gap Analysis", "split"],
+  ["gaps", "Needs & Gaps", "split"],
   ["trace", "Trace View", "route"],
   ["candidates", "Roadmap Candidates", "route"],
+  ["blocks", "Block Upgrades", "box"],
   ["impacts", "Impact Analysis", "bars"],
   ["evidence", "Evidence & Maturity", "doc"],
   ["decisions", "Assumptions", "alert"],
@@ -68,6 +69,7 @@ function blankProject() {
     targetCapabilitySets: [],
     gaps: [],
     roadmapCandidates: [],
+    blockUpgrades: [],
     designElements: [],
     capabilityDesignLinks: [],
     constraints: [],
@@ -105,10 +107,10 @@ function sampleProject() {
     { id: "var_product_3_b3", productId: "prod_product_3", name: "Planned Baseline", block: "Product 3.0", hardwareRevision: "HW Rev C", softwareVersion: "SW 3.0", status: "planned", configurationNotes: "Planned future baseline." },
   ];
   p.capabilities = [
-    { id: "cap_satcom_large_reflector", recordType: "targetNeed", name: "SATCOM Large-Reflector Compatibility", category: "target need", marketSegment: "SATCOM", stakeholder: "Customer Segment", satisfactionStatus: "not met", satisfiedProductIds: [], linkedCapabilityIds: ["cap_performance_envelope"], description: "Support customer segments that require compatibility with larger reflector configurations." },
+    { id: "cap_enterprise_bulk_export", recordType: "targetNeed", name: "Enterprise Bulk Export Readiness", category: "target need", marketSegment: "Enterprise Operations", stakeholder: "Customer Segment", satisfactionStatus: "not met", satisfiedProductIds: [], linkedCapabilityIds: ["cap_bulk_export"], description: "Support customer segments that require scheduled export of large operational datasets." },
     { id: "cap_remote_update", name: "Secure Remote Update", category: "Software Feature", description: "Support secure remote software update workflow." },
     { id: "cap_diag", name: "Automated Fault Isolation", category: "Diagnostics", description: "Localize field faults without SME intervention." },
-    { id: "cap_rx_band", name: "RX Band Coverage", category: "RF Capability", description: "Receive supported mission bands within the required sensitivity and selectivity envelope." },
+    { id: "cap_bulk_export", name: "Bulk Data Export", category: "Data Workflow", description: "Export large operational datasets on a scheduled or on-demand basis without interrupting normal use." },
     { id: "cap_performance_envelope", name: "Performance Envelope", category: "Performance", description: "Meet the target performance envelope for a future product." },
     { id: "cap_input_power", name: "Input Power Envelope", category: "Power Constraint", description: "Supported platform input power constraint, such as 28VDC or 40VDC operation." },
   ];
@@ -122,40 +124,43 @@ function sampleProject() {
     { id: "claim_product_2_remote_update", variantId: "var_product_2_b2", capabilityId: "cap_remote_update", supportStatus: "planned", maturity: "assumption", confidence: "low", evidenceIds: [], bdCaveat: "Future roadmap only.", notes: "Depends on controller resource margin." },
     { id: "claim_product_2_diag", variantId: "var_product_2_b2", capabilityId: "cap_diag", supportStatus: "supported", maturity: "verified", confidence: "high", evidenceIds: ["ev_diag_test_014"], bdCaveat: "", notes: "Good candidate for Block 2 include." },
     { id: "claim_product_25_diag", variantId: "var_product_25_b25", capabilityId: "cap_diag", supportStatus: "supported", maturity: "verified", confidence: "high", evidenceIds: ["ev_diag_test_014"], bdCaveat: "", notes: "Shared with Product 2.0." },
-    { id: "claim_product_3_rx_band", variantId: "var_product_3_b3", capabilityId: "cap_rx_band", supportStatus: "planned", maturity: "analysis", confidence: "medium", evidenceIds: [], bdCaveat: "Requires antenna and RF front-end impact review.", notes: "Target band expansion under study." },
-    { id: "claim_product_3_performance", variantId: "var_product_3_b3", capabilityId: "cap_performance_envelope", supportStatus: "planned", maturity: "unknown", confidence: "low", evidenceIds: [], bdCaveat: "Do not promise.", notes: "Planned architecture not assessed for data throughput." },
+    { id: "claim_product_3_bulk_export", variantId: "var_product_3_b3", capabilityId: "cap_bulk_export", supportStatus: "planned", maturity: "analysis", confidence: "medium", evidenceIds: [], bdCaveat: "Requires export service and storage impact review.", notes: "High-volume export workflow under study." },
+    { id: "claim_product_3_performance", variantId: "var_product_3_b3", capabilityId: "cap_performance_envelope", supportStatus: "planned", maturity: "unknown", confidence: "low", evidenceIds: [], bdCaveat: "Do not promise.", notes: "Planned architecture not assessed for high-volume export workloads." },
     { id: "claim_product_1_power", variantId: "var_product_1_b1", capabilityId: "cap_input_power", supportStatus: "supported", maturity: "verified", confidence: "high", evidenceIds: [], bdCaveat: "", notes: "28VDC input envelope." },
     { id: "claim_product_2_power", variantId: "var_product_2_b2", capabilityId: "cap_input_power", supportStatus: "supported", maturity: "verified", confidence: "high", evidenceIds: [], bdCaveat: "", notes: "40VDC input envelope." },
   ];
   p.gaps = [
     { id: "gap_remote_update", title: "Remote Update Verification Gap", targetCapabilityId: "cap_remote_update", variantId: "var_product_1_b1", description: "Current baseline has only limited verification for a manual update workflow; target requires verified remote update support.", severity: "high", businessImpact: "Blocks target segment claim.", technicalImpact: "controller, subsystem interface, verification campaign.", gapType: "true design gap" },
-    { id: "gap_rx_band", title: "RX Band Expansion Design Gap", targetCapabilityId: "cap_rx_band", variantId: "var_product_2_b2", description: "Target product needs expanded RX band support; current RF chain is not assessed for that band.", severity: "high", businessImpact: "Blocks expanded segment claim.", technicalImpact: "antenna, RF front end, filtering, calibration.", gapType: "true design gap" },
+    { id: "gap_bulk_export", title: "Bulk Export Design Gap", targetCapabilityId: "cap_bulk_export", variantId: "var_product_2_b2", description: "Target product needs high-volume export support; current export workflow is not assessed for large operational datasets.", severity: "high", businessImpact: "Blocks enterprise operations segment claim.", technicalImpact: "export service, storage layer, queue handling, verification dataset.", gapType: "true design gap" },
     { id: "gap_performance_evidence", title: "Performance Evidence Gap", targetCapabilityId: "cap_performance_envelope", variantId: "var_product_2_b2", description: "Performance envelope is analysis-only and not verified on target hardware.", severity: "medium", businessImpact: "Target segment proposal caveat.", technicalImpact: "Subsystem model, verification test, supplier quote.", gapType: "evidence gap" },
   ];
   p.roadmapCandidates = [
     { id: "rc_048", name: "Secure Update Enablement", description: "Enable secure remote update workflow for planned products.", driver: "Remote update gap", targetProductId: "prod_product_3", gapIds: ["gap_remote_update"], businessValue: "high", effort: "L", riskLevel: "high", scheduleDrivers: "Integration lab availability", assumptions: "Assumes existing controller has sufficient memory and security hooks.", decisionStatus: "study" },
     { id: "rc_051", name: "Automated Fault Isolation Matrix", description: "Add field diagnostic decision matrix.", driver: "Reduce MTTR and support burden", targetProductId: "prod_product_25", gapIds: [], businessValue: "medium", effort: "M", riskLevel: "low", scheduleDrivers: "Test equipment scripting", assumptions: "Assumes existing telemetry is sufficient.", decisionStatus: "include" },
-    { id: "rc_062", name: "RX Band Expansion", description: "Expand receive band support for planned products.", driver: "Expanded mission band requirement", targetProductId: "prod_product_3", gapIds: ["gap_rx_band"], businessValue: "high", effort: "L", riskLevel: "high", scheduleDrivers: "Antenna supplier lead time and RF test chamber availability", assumptions: "Assumes enclosure aperture and front-end noise figure can support the new band.", decisionStatus: "study" },
+    { id: "rc_062", name: "Bulk Export Enablement", description: "Enable high-volume operational data export for planned products.", driver: "Enterprise bulk export need", targetProductId: "prod_product_3", gapIds: ["gap_bulk_export"], businessValue: "high", effort: "L", riskLevel: "high", scheduleDrivers: "Representative dataset availability and storage migration window", assumptions: "Assumes export workloads can be queued without degrading interactive workflows.", decisionStatus: "study" },
+  ];
+  p.blockUpgrades = [
+    { id: "blk_product_3", name: "Product 3.0 Block Upgrade", targetProductId: "prod_product_3", fromProductId: "prod_product_2", status: "planning", plannedRelease: "TBD", objective: "Close priority target needs for expanded segment support while capturing design and verification impacts.", candidateIds: ["rc_048", "rc_062"], notes: "Initial upgrade package built from unmet needs and high-value candidates." },
   ];
   p.designElements = [
-    { id: "de_antenna", name: "Antenna Assembly", type: "hardware", owner: "RF Engineering", description: "Antenna aperture, matching network, mounting, and band-dependent performance." },
-    { id: "de_rf_front_end", name: "RF Front End", type: "hardware", owner: "RF Engineering", description: "Low-noise amplifier, filtering, switching, and receive chain components." },
+    { id: "de_export_service", name: "Export Service", type: "software", owner: "Platform Engineering", description: "Background export orchestration, file generation, retry handling, and delivery workflow." },
+    { id: "de_storage_layer", name: "Storage Layer", type: "software", owner: "Data Platform", description: "Operational data model, query paths, retention strategy, and bulk read performance." },
     { id: "de_control_module", name: "Control Module", type: "firmware", owner: "Firmware", description: "Primary control and processing module." },
     { id: "de_diag", name: "Diagnostic Service", type: "software", owner: "Software", description: "Built-in-test and fault isolation service." },
   ];
   p.capabilityDesignLinks = [
-    { id: "cdl_rx_band_antenna", capabilityId: "cap_rx_band", designElementId: "de_antenna", impactType: "band-dependent hardware", rationale: "RX band changes may require antenna tuning, aperture, or matching changes." },
-    { id: "cdl_rx_band_rf_front_end", capabilityId: "cap_rx_band", designElementId: "de_rf_front_end", impactType: "RF chain compatibility", rationale: "RX band changes can affect filtering, LNA selection, switching, and calibration." },
+    { id: "cdl_bulk_export_service", capabilityId: "cap_bulk_export", designElementId: "de_export_service", impactType: "export workflow", rationale: "Bulk export changes require background job orchestration, retry handling, and delivery behavior." },
+    { id: "cdl_bulk_export_storage", capabilityId: "cap_bulk_export", designElementId: "de_storage_layer", impactType: "data access performance", rationale: "Bulk export changes can affect query performance, retention, and storage throughput." },
     { id: "cdl_remote_update_control", capabilityId: "cap_remote_update", designElementId: "de_control_module", impactType: "firmware resource margin", rationale: "Secure update workflows depend on controller memory, boot flow, and security hooks." },
     { id: "cdl_diag_service", capabilityId: "cap_diag", designElementId: "de_diag", impactType: "software function", rationale: "Diagnostic capability changes map directly to the diagnostic service." },
-    { id: "cdl_performance_antenna", capabilityId: "cap_performance_envelope", designElementId: "de_antenna", impactType: "reflector-dependent performance", rationale: "Large-reflector compatibility depends on antenna assembly and validated performance envelope." },
+    { id: "cdl_performance_storage", capabilityId: "cap_performance_envelope", designElementId: "de_storage_layer", impactType: "large dataset performance", rationale: "High-volume export readiness depends on validated storage and query performance." },
   ];
   p.constraints = [
-    { id: "con_reflector_limit", name: "Reflector Size Operating Limit", description: "Current active baseline is not assessed for reflectors larger than the validated envelope.", productIds: ["prod_product_2"], limitType: "physical", limitValue: "Reflector diameter <= validated envelope", basis: "SME assessment pending verification evidence.", severity: "major caveat", workaround: "Route larger-reflector opportunities to planned product assessment.", relatedTargetNeedIds: ["cap_satcom_large_reflector"], relatedCapabilityIds: ["cap_performance_envelope"], evidenceIds: [] },
+    { id: "con_dataset_limit", name: "Dataset Size Operating Limit", description: "Current active baseline is not assessed for export jobs above the validated dataset size.", productIds: ["prod_product_2"], limitType: "performance", limitValue: "Exports limited to validated dataset size", basis: "SME assessment pending verification evidence.", severity: "major caveat", workaround: "Route large-export opportunities to planned product assessment.", relatedTargetNeedIds: ["cap_enterprise_bulk_export"], relatedCapabilityIds: ["cap_bulk_export", "cap_performance_envelope"], evidenceIds: [] },
   ];
   p.impactAssessments = [
     { id: "imp_001", roadmapCandidateId: "rc_048", designElementId: "de_control_module", impactType: "resource margin", severity: "major redesign", confidence: "low", owner: "Firmware", effort: "L-XL", scheduleDriver: "controller utilization estimate", verificationConsequence: "New regression and verification demo required.", riskConsequence: "May force hardware respin.", basis: "SME judgment from similar effort." },
-    { id: "imp_002", roadmapCandidateId: "rc_062", designElementId: "de_antenna", impactType: "band-dependent hardware", severity: "high", confidence: "medium", owner: "RF Engineering", effort: "L", scheduleDriver: "Antenna supplier quote and chamber time", verificationConsequence: "Antenna pattern and sensitivity verification required.", riskConsequence: "May require enclosure or aperture change.", basis: "Suggested by RX band to antenna link." },
+    { id: "imp_002", roadmapCandidateId: "rc_062", designElementId: "de_export_service", impactType: "export workflow", severity: "high", confidence: "medium", owner: "Platform Engineering", effort: "L", scheduleDriver: "Representative dataset and load-test environment availability", verificationConsequence: "Large dataset export and retry verification required.", riskConsequence: "May require queueing or storage architecture changes.", basis: "Suggested by bulk export to export service link." },
   ];
   p.assumptions = [
     { id: "asm_001", statement: "Existing controller has enough margin for secure update hooks.", relatedId: "rc_048", confidence: "low", owner: "Firmware", validationPlan: "Complete utilization estimate.", consequenceIfFalse: "Candidate may require HW Rev D." },
@@ -177,6 +182,12 @@ function normalizeProject(project) {
   });
   normalized.capabilityDesignLinks.forEach((link) => {
     link.id = link.id || makeId("cdl");
+  });
+  normalized.roadmapCandidates.forEach((candidate) => {
+    if (candidate.blockUpgradeId) {
+      const block = byId(normalized.blockUpgrades, candidate.blockUpgradeId);
+      if (block) block.candidateIds = [...new Set([...(block.candidateIds || []), candidate.id])];
+    }
   });
   normalized.viewSettings = normalized.viewSettings || {};
   normalized.schemaVersion = normalized.schemaVersion || SCHEMA_VERSION;
@@ -214,6 +225,7 @@ function render() {
     gaps: renderGaps,
     trace: renderTraceView,
     candidates: renderCandidates,
+    blocks: renderBlockUpgrades,
     impacts: renderImpacts,
     evidence: renderEvidence,
     decisions: renderAssumptions,
@@ -368,10 +380,10 @@ function renderCapabilities() {
     const claim = claimForProductCapability(selectedProductId, cap.id);
     const linkedDesign = linkedDesignElementsForCapability(cap.id);
     const supportStatus = claim?.supportStatus || "unassigned";
-    const group = ["supported", "planned"].includes(supportStatus) ? "Supported / Planned" : supportStatus === "not supported" ? "Not Supported" : "Unassigned / Unknown";
+    const group = supportStatus === "supported" ? "Supported" : supportStatus === "planned" ? "Planned" : supportStatus === "not supported" ? "Not Supported" : "Unassigned / Unknown";
     return { cap, claim, linkedDesign, group };
   });
-  const groupedRows = ["Supported / Planned", "Not Supported", "Unassigned / Unknown"].map((group) => ({ group, rows: rows.filter((row) => row.group === group) }));
+  const groupedRows = ["Supported", "Planned", "Not Supported", "Unassigned / Unknown"].map((group) => ({ group, rows: rows.filter((row) => row.group === group) }));
   const collapsedGroups = p.viewSettings.capabilityGroupsCollapsed || {};
   const capabilityTableHead = `<thead><tr><th>Variation Point</th><th>Type</th><th>${esc(selectedProduct?.name || "Product")} Status</th><th>Evidence Maturity</th><th>Confidence</th><th>Linked Design</th></tr></thead>`;
   return `
@@ -581,64 +593,78 @@ function renderGaps() {
   const p = state.project;
   const targetNeedIds = targetNeedIdsForGapAnalysis();
   const targetNeeds = targetNeedIds.map((id) => byId(p.capabilities, id)).filter(Boolean);
-  const comparedProductIds = [...new Set(p.gaps.map((gap) => byId(p.variants, gap.variantId)?.productId).filter(Boolean))];
+  const selectedProductId = selectedNeedsProductId();
+  const selectedProduct = byId(p.products, selectedProductId);
+  const comparedProductIds = selectedProductId ? [selectedProductId] : [...new Set(p.gaps.map((gap) => byId(p.variants, gap.variantId)?.productId).filter(Boolean))];
+  const needEvaluations = targetNeeds.map((need) => ({ need, evaluation: evaluateNeedForProduct(need, selectedProductId) }));
   return `
-    ${pageHeader("Gap Analysis", "Define target needs, compare selected products against them, and separate true design gaps from evidence gaps.", `<button class="btn secondary" data-add="targetNeed">Add Target Need</button><button class="btn primary" data-add="gap">Add Gap</button>`)}
+    ${pageHeader("Needs & Gaps", "Start with the need, link it to product-facing variation points, then evaluate whether a product meets it.", `<button class="btn primary" data-add="targetNeed">Add Need</button>`)}
     <section class="analysis-setup">
       <div>
-        <span class="setup-kicker">Target Analysis Setup</span>
-        <h2>What need are we trying to satisfy?</h2>
-        <p>Use target needs to state the future capability, customer requirement, market expectation, or block objective. Each gap below compares one target need against one or more selected products.</p>
+        <span class="setup-kicker">Guided Evaluation</span>
+        <h2>Which needs are unmet for this product?</h2>
+        <p>Needs are the source of truth. A gap is created only when a selected product does not meet a need, the need has no linked variation point, or the supporting evidence is not strong enough.</p>
       </div>
       <div class="setup-grid">
         <article>
-          <span>Target Needs In This Analysis</span>
+          <span>Needs In This Analysis</span>
           <strong>${esc(targetNeedIds.length || "None")}</strong>
-          <small>${esc(targetNeedIds.map((id) => capabilityName(id)).join(", ") || "Add a target need or create a gap to begin.")}</small>
+          <small>${esc(targetNeedIds.map((id) => capabilityName(id)).join(", ") || "Add a need to begin.")}</small>
         </article>
         <article>
-          <span>Products Being Compared</span>
-          <strong>${esc(comparedProductIds.length || "None")}</strong>
-          <small>${esc(comparedProductIds.map((id) => productName(id)).join(", ") || "Select products affected by each gap.")}</small>
+          <span>Product Being Evaluated</span>
+          <strong>${esc(selectedProduct?.name || "None")}</strong>
+          <small>${esc(selectedProduct ? `Baseline: ${productVariants(selectedProduct.id)[0]?.block || selectedProduct.name}` : "Add a product to evaluate needs.")}</small>
         </article>
         <article>
-          <span>How To Classify</span>
-          <strong>Design or Evidence</strong>
-          <small>Design gaps need product change; evidence gaps need proof before making the claim.</small>
+          <span>Next Step</span>
+          <strong>Gap → Candidate → Block</strong>
+          <small>Create a gap from an unmet need, create a candidate to close it, then assign that candidate to a block upgrade.</small>
         </article>
       </div>
     </section>
+    <section class="filters compact-filters">
+      <div class="filter">
+        <label>Evaluate Product</label>
+        <select data-needs-product>
+          ${p.products.map((product) => `<option value="${esc(product.id)}" ${product.id === selectedProductId ? "selected" : ""}>${esc(product.name)}</option>`).join("")}
+        </select>
+      </div>
+    </section>
     <section class="summary-grid">
-      ${metric("Design Gaps", p.gaps.filter((g) => g.gapType === "true design gap").length, "Require product change")}
-      ${metric("Evidence Gaps", p.gaps.filter((g) => g.gapType === "evidence gap").length, "Require proof before claim")}
-      ${metric("High Severity", p.gaps.filter((g) => g.severity === "high").length, "Potential blockers")}
+      ${metric("Met", needEvaluations.filter(({ evaluation }) => evaluation.status === "met").length, "Need is supported and verified")}
+      ${metric("Unmet / Partial", needEvaluations.filter(({ evaluation }) => ["unmet", "partial", "unverified"].includes(evaluation.status)).length, "Needs work or evidence")}
+      ${metric("Unmapped", needEvaluations.filter(({ evaluation }) => evaluation.status === "unmapped").length, "No linked variation point")}
     </section>
     <section>
-      <h2 class="section-title">Target Needs</h2>
+      <h2 class="section-title">Need Evaluation</h2>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Target Need</th><th>Market Segment</th><th>Stakeholder</th><th>Status</th><th>Products Meeting Need</th><th>Linked Variation Points</th><th>Linked Gaps</th><th>Description</th></tr></thead>
+          <thead><tr><th>Need</th><th>Market / Stakeholder</th><th>${esc(selectedProduct?.name || "Product")} Status</th><th>Linked Variation Points</th><th>Existing Gaps</th><th>Candidate</th><th>Action</th></tr></thead>
           <tbody>
-            ${targetNeeds.map((need) => {
+            ${needEvaluations.map(({ need, evaluation }) => {
               const linkedGaps = p.gaps.filter((gap) => gap.targetCapabilityId === need.id);
+              const gapForProduct = linkedGaps.find((gap) => byId(p.variants, gap.variantId)?.productId === selectedProductId);
+              const candidate = gapForProduct ? candidateForGap(gapForProduct.id) : null;
+              const needsGap = ["unmapped", "unmet", "partial", "unverified", "unknown"].includes(evaluation.status);
               return `<tr class="clickable-row${selectedRowClass(`capability:${need.id}`)}" data-row-detail="capability:${need.id}">
                 <td><strong>${esc(need.name)}</strong><br><span class="muted">${esc(need.category || "target need")}</span></td>
-                <td>${esc(need.marketSegment || "-")}</td>
-                <td>${esc(need.stakeholder || "-")}</td>
-                <td>${badge(need.satisfactionStatus || "unassessed")}</td>
-                <td>${productSatisfactionHtml(need.satisfiedProductIds)}</td>
+                <td>${esc([need.marketSegment, need.stakeholder].filter(Boolean).join(" / ") || "-")}</td>
+                <td>${badge(evaluation.status)}<br><span class="muted">${esc(evaluation.reason)}</span></td>
                 <td>${capabilityLinks(need.linkedCapabilityIds, "None linked")}</td>
-                <td>${esc(linkedGaps.map((gap) => gap.title || gap.description || gap.id).join(", ") || "No gaps linked yet")}</td>
-                <td>${esc(need.description || "-")}</td>
+                <td>${esc(linkedGaps.map((gap) => gap.title || gap.description || gap.id).join(", ") || "No gaps yet")}</td>
+                <td>${candidate ? `<button class="link-button" type="button" data-detail="candidate:${esc(candidate.id)}">${esc(candidate.name)}</button>` : "None"}</td>
+                <td>${needsGap ? `<button class="btn secondary" type="button" data-create-gap-for-need="${esc(need.id)}" data-product-id="${esc(selectedProductId)}">${gapForProduct ? "Open Gap" : "Create Gap"}</button>` : `<span class="muted">No gap</span>`}</td>
               </tr>`;
-            }).join("") || `<tr><td colspan="8">${empty("No target needs yet.")}</td></tr>`}
+            }).join("") || `<tr><td colspan="7">${empty("No needs yet.")}</td></tr>`}
           </tbody>
         </table>
       </div>
     </section>
+    <h2 class="section-title">Gap Records</h2>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Gap</th><th>Target Need / Capability</th><th>Compared Product</th><th>Closing Candidate</th><th>Severity</th><th>Gap Type</th><th>Business Impact</th><th>Technical Impact</th></tr></thead>
+        <thead><tr><th>Gap</th><th>Need</th><th>Compared Product</th><th>Closing Candidate</th><th>Severity</th><th>Gap Type</th><th>Action</th></tr></thead>
         <tbody>
           ${p.gaps.map((g) => `<tr class="clickable-row${selectedRowClass(`gap:${g.id}`)}" data-row-detail="gap:${g.id}">
             <td><strong>${esc(g.title || g.description)}</strong><br><span class="muted">${esc(g.description || "")}</span></td>
@@ -647,9 +673,8 @@ function renderGaps() {
             <td>${esc(closingCandidateNamesForGap(g.id))}</td>
             <td>${badge(g.severity)}</td>
             <td>${badge(g.gapType)}</td>
-            <td>${esc(g.businessImpact)}</td>
-            <td>${esc(g.technicalImpact)}</td>
-          </tr>`).join("")}
+            <td><button class="btn secondary" type="button" data-create-candidate-for-gap="${esc(g.id)}">${candidateForGap(g.id) ? "Open Candidate" : "Create Candidate"}</button></td>
+          </tr>`).join("") || `<tr><td colspan="7">${empty("No gap records yet. Create one from an unmet need above.")}</td></tr>`}
         </tbody>
       </table>
     </div>
@@ -768,7 +793,7 @@ function traceNode({ kind, label, titleText, meta = "", detail = "", productId =
 function renderCandidates() {
   const p = state.project;
   return `
-    ${pageHeader("Roadmap Candidates", "Potential upgrades, value, risk, assumptions, and product targets.", `<button class="btn primary" data-add="candidate">Add Candidate</button>`)}
+    ${pageHeader("Roadmap Candidates", "Candidate upgrades are proposed feature/design packages that close unmet needs and feed block plans.", `<button class="btn primary" data-add="candidate">Add Candidate</button>`)}
     <section class="summary-grid">
       ${metric("Total", p.roadmapCandidates.length, "Candidates")}
       ${metric("Include", p.roadmapCandidates.filter((c) => c.decisionStatus === "include").length, "Fund / plan now")}
@@ -777,13 +802,14 @@ function renderCandidates() {
     </section>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Name</th><th>Product</th><th>Driver</th><th>Gap Closed</th><th>Value</th><th>Effort</th><th>Risk</th><th>Confidence</th><th>Status</th></tr></thead>
+        <thead><tr><th>Name</th><th>Product</th><th>Driver</th><th>Gap Closed</th><th>Block</th><th>Value</th><th>Effort</th><th>Risk</th><th>Confidence</th><th>Status</th></tr></thead>
         <tbody>
           ${p.roadmapCandidates.map((c) => `<tr class="clickable-row${selectedRowClass(`candidate:${c.id}`)}" data-row-detail="candidate:${c.id}">
             <td><strong>${esc(c.name)}</strong></td>
             <td>${esc(candidateProductName(c))}</td>
             <td>${esc(c.driver)}</td>
             <td>${esc(idsToNames(c.gapIds, p.gaps, "No linked gap"))}</td>
+            <td>${esc(blockForCandidate(c.id)?.name || "Unassigned")}</td>
             <td>${badge(c.businessValue)}</td>
             <td>${badge(c.effort)}</td>
             <td>${badge(c.riskLevel === "high" ? "high risk" : c.riskLevel)}</td>
@@ -793,6 +819,78 @@ function renderCandidates() {
         </tbody>
       </table>
     </div>
+  `;
+}
+
+function renderBlockUpgrades() {
+  const p = state.project;
+  return `
+    ${pageHeader("Block Upgrades", "Bundle selected roadmap candidates into a product block plan with scope, risk, verification work, and release intent.", `<button class="btn primary" data-add="block">Add Block Upgrade</button>`)}
+    <section class="summary-grid">
+      ${metric("Blocks", p.blockUpgrades.length, "Planned upgrade packages")}
+      ${metric("Candidates Assigned", new Set(p.blockUpgrades.flatMap((block) => block.candidateIds || [])).size, "Candidate links")}
+      ${metric("Unassigned Candidates", p.roadmapCandidates.filter((candidate) => !blockForCandidate(candidate.id)).length, "Available for planning")}
+    </section>
+    <section class="block-upgrade-board">
+      ${p.blockUpgrades.map((block) => blockUpgradeCard(block)).join("") || empty("No block upgrades yet. Create one from a candidate or add a block upgrade.")}
+    </section>
+    <h2 class="section-title">Unassigned Candidates</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Candidate</th><th>Product</th><th>Gap / Need</th><th>Value</th><th>Effort</th><th>Risk</th><th>Action</th></tr></thead>
+        <tbody>
+          ${p.roadmapCandidates.filter((candidate) => !blockForCandidate(candidate.id)).map((candidate) => `<tr class="clickable-row${selectedRowClass(`candidate:${candidate.id}`)}" data-row-detail="candidate:${candidate.id}">
+            <td><strong>${esc(candidate.name)}</strong><br><span class="muted">${esc(candidate.description || candidate.driver || "")}</span></td>
+            <td>${esc(candidateProductName(candidate))}</td>
+            <td>${esc(idsToNames(candidate.gapIds, p.gaps, "No linked gap"))}</td>
+            <td>${badge(candidate.businessValue || "unknown")}</td>
+            <td>${badge(candidate.effort || "unknown")}</td>
+            <td>${badge(candidate.riskLevel === "high" ? "high risk" : candidate.riskLevel || "unknown")}</td>
+            <td><button class="btn secondary" type="button" data-plan-block-from-candidate="${esc(candidate.id)}">Plan Block</button></td>
+          </tr>`).join("") || `<tr><td colspan="7">${empty("All candidates are assigned to a block upgrade.")}</td></tr>`}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function blockUpgradeCard(block) {
+  const candidates = (block.candidateIds || []).map((id) => byId(state.project.roadmapCandidates, id)).filter(Boolean);
+  const impacts = candidates.flatMap((candidate) => state.project.impactAssessments.filter((impact) => impact.roadmapCandidateId === candidate.id));
+  const gaps = candidates.flatMap((candidate) => (candidate.gapIds || []).map((id) => byId(state.project.gaps, id)).filter(Boolean));
+  return `
+    <article class="card block-upgrade-card">
+      <header class="block-upgrade-header">
+        <div>
+          <h2 class="section-title">${esc(block.name)}</h2>
+          <p>${esc(block.objective || "No objective captured.")}</p>
+        </div>
+        <button class="btn secondary" type="button" data-detail="block:${esc(block.id)}">Edit</button>
+      </header>
+      <div class="summary-panel block-summary">
+        <div><span>Target</span><strong>${esc(productName(block.targetProductId) || "No target")}</strong></div>
+        <div><span>From</span><strong>${esc(productName(block.fromProductId) || "No source")}</strong></div>
+        <div><span>Candidates</span><strong>${candidates.length}</strong></div>
+        <div><span>Design Impacts</span><strong>${impacts.length}</strong></div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Candidate</th><th>Need / Gap</th><th>Status</th><th>Value</th><th>Risk</th><th>Effort</th></tr></thead>
+          <tbody>
+            ${candidates.map((candidate) => `<tr class="clickable-row${selectedRowClass(`candidate:${candidate.id}`)}" data-row-detail="candidate:${candidate.id}">
+              <td><strong>${esc(candidate.name)}</strong></td>
+              <td>${esc(idsToNames(candidate.gapIds, state.project.gaps, "No linked gap"))}</td>
+              <td>${badge(candidate.decisionStatus || "study")}</td>
+              <td>${badge(candidate.businessValue || "unknown")}</td>
+              <td>${badge(candidate.riskLevel === "high" ? "high risk" : candidate.riskLevel || "unknown")}</td>
+              <td>${badge(candidate.effort || "unknown")}</td>
+            </tr>`).join("") || `<tr><td colspan="6">${empty("No candidates assigned to this block.")}</td></tr>`}
+          </tbody>
+        </table>
+      </div>
+      <p class="muted">Gaps covered: ${esc(gaps.map((gap) => gap.title || gap.description || gap.id).join(", ") || "None")}</p>
+      <p class="muted">Release: ${esc(block.plannedRelease || "TBD")} | Status: ${esc(title(block.status || "planning"))}</p>
+    </article>
   `;
 }
 
@@ -1021,6 +1119,7 @@ function traceRowsForNeed(need) {
   return rows;
 }
 function candidateName(id) { return byId(state.project.roadmapCandidates, id)?.name || id || "Unknown candidate"; }
+function blockName(id) { return byId(state.project.blockUpgrades, id)?.name || id || "No block"; }
 function designElementName(id) { return byId(state.project.designElements, id)?.name || id || "Unknown design element"; }
 function linkedDesignElementsForCapability(capabilityId) {
   return state.project.capabilityDesignLinks
@@ -1050,6 +1149,26 @@ function candidateProductName(candidate) {
   const variant = byId(state.project.variants, candidate.affectedVariantIds?.[0]);
   return productName(variant?.productId) || candidate.targetBlock || "No product selected";
 }
+function selectedNeedsProductId() {
+  const savedId = state.project.viewSettings?.needsProductId;
+  return byId(state.project.products, savedId)?.id || state.project.products.find((product) => ["current", "planned"].includes(product.status))?.id || state.project.products[0]?.id || "";
+}
+function evaluateNeedForProduct(need, productId) {
+  if (!productId) return { status: "unknown", reason: "No product selected." };
+  const linkedCapabilityIds = need.linkedCapabilityIds || [];
+  if (!linkedCapabilityIds.length) return { status: "unmapped", reason: "Need is not linked to a variation point yet." };
+  const claims = linkedCapabilityIds.map((capabilityId) => ({ capabilityId, claim: claimForProductCapability(productId, capabilityId) }));
+  if (claims.some(({ claim }) => !claim || ["not supported", "unknown"].includes(claim.supportStatus))) return { status: "unmet", reason: "At least one linked variation point is unsupported or unknown." };
+  if (claims.some(({ claim }) => claim.supportStatus === "planned")) return { status: "partial", reason: "Linked variation point is planned, not current." };
+  if (claims.some(({ claim }) => !["verified"].includes(claim.maturity) || ["low", "unknown"].includes(claim.confidence))) return { status: "unverified", reason: "Support exists but evidence/confidence is not strong enough." };
+  return { status: "met", reason: "Linked variation points are supported with verified evidence." };
+}
+function blockForCandidate(candidateId) {
+  return state.project.blockUpgrades.find((block) => (block.candidateIds || []).includes(candidateId));
+}
+function blockIdForCandidate(candidateId) {
+  return blockForCandidate(candidateId)?.id || "";
+}
 function idsToNames(ids, collection, fallback = "None") {
   const names = (ids || []).map((id) => byId(collection, id)?.name || byId(collection, id)?.title || id);
   return names.length ? names.join(", ") : fallback;
@@ -1072,6 +1191,15 @@ function assignCandidateToGap(candidateId, gapId) {
   const candidate = byId(state.project.roadmapCandidates, candidateId);
   if (!candidate) return;
   candidate.gapIds = [gapId];
+}
+function assignCandidateToBlock(candidateId, blockId) {
+  state.project.blockUpgrades.forEach((block) => {
+    block.candidateIds = (block.candidateIds || []).filter((id) => id !== candidateId);
+  });
+  const candidate = byId(state.project.roadmapCandidates, candidateId);
+  if (candidate) candidate.blockUpgradeId = blockId || "";
+  const block = byId(state.project.blockUpgrades, blockId);
+  if (block && candidateId) block.candidateIds = [...new Set([...(block.candidateIds || []), candidateId])];
 }
 function primaryGapForCandidate(candidate) {
   return byId(state.project.gaps, candidate?.gapIds?.[0]);
@@ -1225,6 +1353,37 @@ function bindContentActions() {
       render();
     });
   });
+  $("#content").querySelectorAll("[data-needs-product]").forEach((selectEl) => {
+    selectEl.addEventListener("change", () => {
+      state.project.viewSettings.needsProductId = selectEl.value;
+      render();
+    });
+  });
+  $("#content").querySelectorAll("[data-create-gap-for-need]").forEach((button) => {
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      createOrOpenGapForNeed(button.dataset.createGapForNeed, button.dataset.productId);
+    });
+  });
+  $("#content").querySelectorAll("[data-create-candidate-for-gap]").forEach((button) => {
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      createOrOpenCandidateForGap(button.dataset.createCandidateForGap);
+    });
+  });
+  $("#content").querySelectorAll("[data-create-candidate-for-need]").forEach((button) => {
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const gap = createGapRecordForNeed(button.dataset.createCandidateForNeed, button.dataset.productId, { save: true });
+      createOrOpenCandidateForGap(gap.id);
+    });
+  });
+  $("#content").querySelectorAll("[data-plan-block-from-candidate]").forEach((button) => {
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      createOrOpenBlockForCandidate(button.dataset.planBlockFromCandidate);
+    });
+  });
   $("#content").querySelectorAll("[data-capability-filter]").forEach((selectEl) => selectEl.addEventListener("change", applyCapabilityFilters));
   $("#content").querySelectorAll("[data-capability-group-toggle]").forEach((button) => {
     button.addEventListener("click", () => {
@@ -1288,6 +1447,7 @@ async function openDetail(token) {
   if (type === "design") return openDesignDrawer(byId(state.project.designElements, id), false);
   if (type === "gap") return openGapDrawer(byId(state.project.gaps, id), false);
   if (type === "candidate") return openCandidateDrawer(byId(state.project.roadmapCandidates, id), false);
+  if (type === "block") return openBlockDrawer(byId(state.project.blockUpgrades, id), false);
   const map = {
     variant: ["Variant", state.project.variants, variantFields(), null, () => deleteVariant(record.id), "This will also remove linked capability claims and gaps for this variant."],
     claim: ["Capability Claim", state.project.capabilityClaims, claimFields()],
@@ -1331,6 +1491,7 @@ async function openAdd(type) {
   if (type === "gap") return openGapDrawer({ id: makeId("gap"), title: "New Gap", targetCapabilityId: state.project.capabilities[0]?.id || "", variantId: state.project.variants[0]?.id || "", description: "", severity: "medium", businessImpact: "", technicalImpact: "", gapType: "evidence gap" }, true);
   if (type === "candidate") return openCandidateDrawer({ id: makeId("rc"), name: "New Roadmap Candidate", decisionStatus: "study", effort: "M", riskLevel: "medium", targetProductId: state.project.products[0]?.id || "", gapIds: [] }, true);
   if (type === "constraint") return openConstraintDrawer({ id: makeId("con"), name: "New Constraint", description: "", productIds: [], limitType: "operational", limitValue: "", basis: "", severity: "major caveat", workaround: "", relatedTargetNeedIds: [], relatedCapabilityIds: [], evidenceIds: [] }, true);
+  if (type === "block") return openBlockDrawer({ id: makeId("blk"), name: "New Block Upgrade", targetProductId: state.project.products.find((product) => product.status === "planned")?.id || state.project.products[0]?.id || "", fromProductId: state.project.products.find((product) => product.status === "current")?.id || "", status: "planning", plannedRelease: "TBD", objective: "", candidateIds: [], notes: "" }, true);
   const map = {
     variant: ["Variant", state.project.variants, variantFields(), { id: makeId("var"), productId: state.project.products[0]?.id || "", name: "New Variant", block: "Block TBD", status: "planned" }],
     impact: ["Impact", state.project.impactAssessments, impactFields(), { id: makeId("imp"), roadmapCandidateId: state.project.roadmapCandidates[0]?.id || "", designElementId: state.project.designElements[0]?.id || "", impactType: "impact review", severity: "medium", confidence: "low", effort: "M" }],
@@ -1476,7 +1637,7 @@ function openProductDrawer(product, isNew) {
         <h3>Actions</h3>
         <div class="drawer-action-stack">
           <button class="btn secondary" type="button" data-jump-view="matrix" data-focus-product="${esc(product.id)}">View in Variation Points</button>
-          <button class="btn primary" type="button" data-jump-view="gaps">Run Gap Analysis from This Product</button>
+          <button class="btn primary" type="button" data-jump-view="gaps">Evaluate Needs for This Product</button>
           <button class="btn secondary" type="button" data-jump-view="candidates">Create Upgrade Candidate</button>
         </div>
       </section>
@@ -1597,8 +1758,43 @@ function openDesignDrawer(design, isNew) {
   }
 }
 
+function openBlockDrawer(block, isNew) {
+  if (!block) return;
+  openForm(isNew ? "Add Block Upgrade" : "Block Upgrade", block.name || block.id, block, blockFields(), (values) => {
+    Object.assign(block, values);
+    if (isNew && !byId(state.project.blockUpgrades, block.id)) state.project.blockUpgrades.push(block);
+    state.project.roadmapCandidates.forEach((candidate) => {
+      if ((block.candidateIds || []).includes(candidate.id)) candidate.blockUpgradeId = block.id;
+      else if (candidate.blockUpgradeId === block.id) candidate.blockUpgradeId = "";
+    });
+    markDirty();
+    render();
+    closeDrawer();
+    toast(`Block upgrade ${isNew ? "added" : "updated"}.`);
+  }, {
+    isNew,
+    createText: isNew ? "Create Block Upgrade" : "Save",
+    draftLabel: "Block Upgrade",
+    ...(!isNew ? {
+      deleteText: "Delete Block Upgrade",
+      deleteMessage: "This removes the block plan but keeps products, needs, candidates, gaps, and impacts.",
+      onDelete: () => {
+        state.project.roadmapCandidates.forEach((candidate) => {
+          if (candidate.blockUpgradeId === block.id) candidate.blockUpgradeId = "";
+        });
+        state.project.blockUpgrades = state.project.blockUpgrades.filter((item) => item.id !== block.id);
+        markDirty();
+        render();
+        closeDrawer();
+        toast("Block upgrade deleted.");
+      },
+    } : {}),
+  });
+}
+
 function openCandidateDrawer(candidate, isNew) {
   if (!candidate) return;
+  candidate.blockUpgradeId = candidate.blockUpgradeId || blockIdForCandidate(candidate.id);
   const suggestedImpacts = isNew ? [] : suggestedDesignImpactsForCandidate(candidate);
   $("#drawerKicker").innerHTML = `${badge(candidate.decisionStatus || "study")} <span class="drawer-type">Roadmap Candidate</span>`;
   $("#drawerTitle").textContent = candidate.name || "New Roadmap Candidate";
@@ -1623,6 +1819,7 @@ function openCandidateDrawer(candidate, isNew) {
     Object.assign(candidate, normalized);
     if (isNew && !byId(state.project.roadmapCandidates, candidate.id)) state.project.roadmapCandidates.push(candidate);
     if (normalized.gapIds[0]) assignCandidateToGap(candidate.id, normalized.gapIds[0]);
+    assignCandidateToBlock(candidate.id, normalized.blockUpgradeId);
     markDirty();
     render();
     closeDrawer();
@@ -1641,6 +1838,7 @@ function openCandidateDrawer(candidate, isNew) {
     const normalized = normalizeCandidateForm(Object.fromEntries(new FormData($("#drawerForm")).entries()));
     Object.assign(candidate, normalized);
     if (normalized.gapIds[0]) assignCandidateToGap(candidate.id, normalized.gapIds[0]);
+    assignCandidateToBlock(candidate.id, normalized.blockUpgradeId);
     const created = createMissingSuggestedImpacts(candidate);
     markDirty();
     if (!created) {
@@ -1959,6 +2157,74 @@ function createMissingSuggestedImpacts(candidate) {
   return created;
 }
 
+function createGapRecordForNeed(needId, productId, { save = false } = {}) {
+  const existing = state.project.gaps.find((gap) => gap.targetCapabilityId === needId && byId(state.project.variants, gap.variantId)?.productId === productId);
+  if (existing) return existing;
+  const need = byId(state.project.capabilities, needId);
+  const variant = primaryVariantForProduct(productId || selectedNeedsProductId());
+  const evaluation = evaluateNeedForProduct(need, variant.productId);
+  const gap = {
+    id: makeId("gap"),
+    title: `${need?.name || "Need"} Gap`,
+    targetCapabilityId: needId,
+    variantId: variant.id,
+    description: evaluation.reason || "Need is not met by the selected product.",
+    severity: evaluation.status === "unmapped" ? "medium" : "high",
+    businessImpact: need?.marketSegment ? `Blocks ${need.marketSegment} need.` : "Blocks target need.",
+    technicalImpact: (need?.linkedCapabilityIds || []).map((id) => capabilityName(id)).join(", ") || "Map this need to variation points and design elements.",
+    gapType: evaluation.status === "unverified" ? "evidence gap" : "true design gap",
+  };
+  if (save) state.project.gaps.push(gap);
+  return gap;
+}
+
+function createOrOpenGapForNeed(needId, productId) {
+  const existing = state.project.gaps.find((gap) => gap.targetCapabilityId === needId && byId(state.project.variants, gap.variantId)?.productId === productId);
+  if (existing) return openDetail(`gap:${existing.id}`);
+  openGapDrawer(createGapRecordForNeed(needId, productId), true);
+}
+
+function createOrOpenCandidateForGap(gapId) {
+  const existing = candidateForGap(gapId);
+  if (existing) return openDetail(`candidate:${existing.id}`);
+  const gap = byId(state.project.gaps, gapId);
+  const productId = byId(state.project.variants, gap?.variantId)?.productId || selectedNeedsProductId();
+  const candidate = {
+    id: makeId("rc"),
+    name: `${capabilityName(gap?.targetCapabilityId)} Upgrade`,
+    description: `Close ${gap?.title || "selected gap"}.`,
+    driver: gap?.title || gap?.description || "Unmet need",
+    targetProductId: productId,
+    gapIds: [gapId],
+    businessValue: "medium",
+    effort: "M",
+    riskLevel: gap?.severity === "high" ? "high" : "medium",
+    scheduleDrivers: "",
+    assumptions: "",
+    decisionStatus: "study",
+    blockUpgradeId: "",
+  };
+  openCandidateDrawer(candidate, true);
+}
+
+function createOrOpenBlockForCandidate(candidateId) {
+  const existing = blockForCandidate(candidateId);
+  if (existing) return openDetail(`block:${existing.id}`);
+  const candidate = byId(state.project.roadmapCandidates, candidateId);
+  const block = {
+    id: makeId("blk"),
+    name: `${candidateProductName(candidate)} Block Upgrade`,
+    targetProductId: candidate?.targetProductId || state.project.products[0]?.id || "",
+    fromProductId: state.project.products.find((product) => product.status === "current")?.id || "",
+    status: "planning",
+    plannedRelease: "TBD",
+    objective: candidate ? `Plan a block upgrade around ${candidate.name}.` : "",
+    candidateIds: [candidateId],
+    notes: "",
+  };
+  openBlockDrawer(block, true);
+}
+
 function normalizeCandidateForm(values) {
   return {
     name: values.name,
@@ -1972,6 +2238,7 @@ function normalizeCandidateForm(values) {
     scheduleDrivers: values.scheduleDrivers,
     assumptions: values.assumptions,
     decisionStatus: values.decisionStatus,
+    blockUpgradeId: values.blockUpgradeId || "",
   };
 }
 
@@ -1998,7 +2265,7 @@ function openForm(kicker, titleText, record, fields, onSave, options = {}) {
     const values = Object.fromEntries(formData.entries());
     fields.forEach((f) => {
       if (f.type === "ids") values[f.name] = String(values[f.name] || "").split(",").map((v) => v.trim()).filter(Boolean);
-      if (["products", "targetNeeds", "variationPoints", "evidence"].includes(f.type)) values[f.name] = formData.getAll(f.name);
+      if (["products", "targetNeeds", "variationPoints", "evidence", "candidates"].includes(f.type)) values[f.name] = formData.getAll(f.name);
       if (f.type === "date" && !values[f.name]) values[f.name] = "";
     });
     onSave(values);
@@ -2024,6 +2291,8 @@ function renderField(field, value) {
   if (field.type === "gap") return gapSelect(field.name, field.label, value, field.currentCandidateId || "");
   if (field.type === "design") return designElementSelect(field.name, field.label, value);
   if (field.type === "candidate") return roadmapCandidateSelect(field.name, field.label, value);
+  if (field.type === "block") return blockUpgradeSelect(field.name, field.label, value);
+  if (field.type === "candidates") return candidateCheckboxes(field.name, field.label, value || []);
   if (field.type === "ids") return input(field.name, `${field.label} (comma-separated IDs)`, (value || []).join(", "));
   return input(field.name, field.label, value, field.type || "text");
 }
@@ -2071,6 +2340,9 @@ function designElementSelect(name, labelText, value = "") {
 }
 function roadmapCandidateSelect(name, labelText, value = "") {
   return `<label>${esc(labelText)}<select name="${esc(name)}">${state.project.roadmapCandidates.map((candidate) => `<option value="${esc(candidate.id)}" ${candidate.id === value ? "selected" : ""}>${esc(candidate.name)}</option>`).join("")}</select></label>`;
+}
+function blockUpgradeSelect(name, labelText, value = "") {
+  return `<label>${esc(labelText)}<select name="${esc(name)}"><option value="">No block assigned</option>${state.project.blockUpgrades.map((block) => `<option value="${esc(block.id)}" ${block.id === value ? "selected" : ""}>${esc(block.name)}</option>`).join("")}</select></label>`;
 }
 function productCheckboxes(name, labelText, selectedIds = []) {
   return `
@@ -2142,6 +2414,16 @@ function designElementCheckboxes(name, labelText, selectedIds = []) {
     </fieldset>
   `;
 }
+function candidateCheckboxes(name, labelText, selectedIds = []) {
+  return `
+    <fieldset class="checkbox-field">
+      <legend>${esc(labelText)}</legend>
+      <div class="checkbox-list">
+        ${state.project.roadmapCandidates.map((candidate) => `<label><input type="checkbox" name="${esc(name)}" value="${esc(candidate.id)}" ${selectedIds.includes(candidate.id) ? "checked" : ""}> <span>${esc(candidate.name)}</span></label>`).join("") || `<span class="muted">No candidates yet.</span>`}
+      </div>
+    </fieldset>
+  `;
+}
 
 function productFields() {
   return [{ name: "name", label: "Name" }, selectField("status", "Status", ["retired", "current", "supported", "planned", "obsolete", "prototype"]), { name: "description", label: "Description", type: "textarea" }, { name: "notes", label: "Notes", type: "textarea" }];
@@ -2161,6 +2443,18 @@ function constraintFields() {
     { name: "evidenceIds", label: "Linked Evidence", type: "evidence" },
   ];
 }
+function blockFields() {
+  return [
+    { name: "name", label: "Block Name" },
+    { name: "objective", label: "Objective", type: "textarea" },
+    { name: "targetProductId", label: "Target Product", type: "product" },
+    { name: "fromProductId", label: "Upgrade From Product", type: "product" },
+    selectField("status", "Status", ["planning", "approved", "in progress", "deferred", "released"]),
+    { name: "plannedRelease", label: "Planned Release" },
+    { name: "candidateIds", label: "Candidate Scope", type: "candidates" },
+    { name: "notes", label: "Notes", type: "textarea" },
+  ];
+}
 function variantFields() {
   return [{ name: "id", label: "ID" }, { name: "productId", label: "Product ID" }, { name: "name", label: "Variant Name" }, { name: "block", label: "Block / Version" }, { name: "hardwareRevision", label: "Hardware Revision" }, { name: "softwareVersion", label: "Software/Firmware Version" }, selectField("status", "Status", ["retired", "current", "supported", "planned", "obsolete", "prototype"]), { name: "configurationNotes", label: "Configuration Notes", type: "textarea" }];
 }
@@ -2168,7 +2462,7 @@ function claimFields() {
   return [{ name: "id", label: "ID" }, { name: "variantId", label: "Variant ID" }, { name: "capabilityId", label: "Capability ID" }, selectField("supportStatus", "Support Status", ["supported", "not supported", "planned", "unknown"]), selectField("maturity", "Evidence Maturity", ["verified", "analysis", "simulation", "assumption", "unknown"]), selectField("confidence", "Confidence", ["low", "medium", "high", "unknown"]), { name: "evidenceIds", label: "Evidence IDs", type: "ids" }, { name: "bdCaveat", label: "BD Caveat" }, { name: "notes", label: "Notes", type: "textarea" }];
 }
 function candidateFields(currentCandidateId = "") {
-  return [{ name: "name", label: "Name" }, { name: "description", label: "Description", type: "textarea" }, { name: "driver", label: "Driving Need / Rationale" }, { name: "targetProductId", label: "Product", type: "product" }, { name: "gapId", label: "Gap Closed", type: "gap", currentCandidateId }, selectField("businessValue", "Business Value", ["low", "medium", "high"]), selectField("effort", "Effort", ["S", "M", "L", "XL"]), selectField("riskLevel", "Risk Level", ["low", "medium", "high"]), { name: "scheduleDrivers", label: "Schedule Drivers", type: "textarea" }, { name: "assumptions", label: "Assumptions", type: "textarea" }, selectField("decisionStatus", "Decision Status", ["include", "study", "defer", "reject", "blocked"])];
+  return [{ name: "name", label: "Name" }, { name: "description", label: "Description", type: "textarea" }, { name: "driver", label: "Driving Need / Rationale" }, { name: "targetProductId", label: "Product", type: "product" }, { name: "gapId", label: "Gap Closed", type: "gap", currentCandidateId }, { name: "blockUpgradeId", label: "Block Upgrade", type: "block" }, selectField("businessValue", "Business Value", ["low", "medium", "high"]), selectField("effort", "Effort", ["S", "M", "L", "XL"]), selectField("riskLevel", "Risk Level", ["low", "medium", "high"]), { name: "scheduleDrivers", label: "Schedule Drivers", type: "textarea" }, { name: "assumptions", label: "Assumptions", type: "textarea" }, selectField("decisionStatus", "Decision Status", ["include", "study", "defer", "reject", "blocked"])];
 }
 function impactFields() {
   return [{ name: "id", label: "ID" }, { name: "roadmapCandidateId", label: "Roadmap Candidate", type: "candidate" }, { name: "designElementId", label: "Design Element", type: "design" }, { name: "impactType", label: "Impact Type" }, selectField("severity", "Severity", ["low", "medium", "high", "major redesign"]), selectField("confidence", "Confidence", ["low", "medium", "high"]), { name: "owner", label: "Owner / Team" }, { name: "effort", label: "Effort Range / Size" }, { name: "scheduleDriver", label: "Schedule Driver", type: "textarea" }, { name: "verificationConsequence", label: "Verification Consequence", type: "textarea" }, { name: "riskConsequence", label: "Risk Consequence", type: "textarea" }, { name: "basis", label: "Basis of Estimate", type: "textarea" }];

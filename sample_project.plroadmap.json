@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "0.2.0",
+  "schemaVersion": "0.3.0",
   "project": {
     "id": "proj_sample",
     "name": "Example Product Line Roadmap",
@@ -87,18 +87,18 @@
   ],
   "capabilities": [
     {
-      "id": "cap_satcom_large_reflector",
+      "id": "cap_enterprise_bulk_export",
       "recordType": "targetNeed",
-      "name": "SATCOM Large-Reflector Compatibility",
+      "name": "Enterprise Bulk Export Readiness",
       "category": "target need",
-      "marketSegment": "SATCOM",
+      "marketSegment": "Enterprise Operations",
       "stakeholder": "Customer Segment",
       "satisfactionStatus": "not met",
       "satisfiedProductIds": [],
       "linkedCapabilityIds": [
-        "cap_performance_envelope"
+        "cap_bulk_export"
       ],
-      "description": "Support customer segments that require compatibility with larger reflector configurations."
+      "description": "Support customer segments that require scheduled export of large operational datasets."
     },
     {
       "id": "cap_remote_update",
@@ -113,10 +113,10 @@
       "description": "Supported platform input power constraint, such as 28VDC or 40VDC operation."
     },
     {
-      "id": "cap_rx_band",
-      "name": "RX Band Coverage",
-      "category": "RF Capability",
-      "description": "Receive supported mission bands within the required sensitivity and selectivity envelope."
+      "id": "cap_bulk_export",
+      "name": "Bulk Data Export",
+      "category": "Data Workflow",
+      "description": "Export large operational datasets on a scheduled or on-demand basis without interrupting normal use."
     },
     {
       "id": "cap_performance_envelope",
@@ -163,15 +163,15 @@
       "notes": "40VDC input envelope."
     },
     {
-      "id": "claim_product_3_rx_band",
+      "id": "claim_product_3_bulk_export",
       "variantId": "var_product_3_b3",
-      "capabilityId": "cap_rx_band",
+      "capabilityId": "cap_bulk_export",
       "supportStatus": "planned",
       "maturity": "analysis",
       "confidence": "medium",
       "evidenceIds": [],
-      "bdCaveat": "Requires antenna and RF front-end impact review.",
-      "notes": "Target band expansion under study."
+      "bdCaveat": "Requires export service and storage impact review.",
+      "notes": "High-volume export workflow under study."
     },
     {
       "id": "claim_product_3_performance",
@@ -182,7 +182,7 @@
       "confidence": "low",
       "evidenceIds": [],
       "bdCaveat": "Do not promise.",
-      "notes": "Planned architecture not assessed for larger reflector configurations."
+      "notes": "Planned architecture not assessed for high-volume export workloads."
     }
   ],
   "evidence": [
@@ -211,14 +211,14 @@
       "gapType": "true design gap"
     },
     {
-      "id": "gap_rx_band",
-      "title": "RX Band Expansion Design Gap",
-      "targetCapabilityId": "cap_rx_band",
+      "id": "gap_bulk_export",
+      "title": "Bulk Export Design Gap",
+      "targetCapabilityId": "cap_bulk_export",
       "variantId": "var_product_2_b2",
-      "description": "Target product needs expanded RX band support; current RF chain is not assessed for that band.",
+      "description": "Target product needs high-volume export support; current export workflow is not assessed for large operational datasets.",
       "severity": "high",
-      "businessImpact": "Blocks expanded segment claim.",
-      "technicalImpact": "antenna, RF front end, filtering, calibration.",
+      "businessImpact": "Blocks enterprise operations segment claim.",
+      "technicalImpact": "export service, storage layer, queue handling, verification dataset.",
       "gapType": "true design gap"
     }
   ],
@@ -237,39 +237,57 @@
       "riskLevel": "high",
       "scheduleDrivers": "Integration lab availability",
       "assumptions": "Assumes existing controller has sufficient memory and security hooks.",
-      "decisionStatus": "study"
+      "decisionStatus": "study",
+      "blockUpgradeId": "blk_product_3"
     },
     {
       "id": "rc_062",
-      "name": "RX Band Expansion",
-      "description": "Expand receive band support for planned products.",
-      "driver": "Expanded mission band requirement",
+      "name": "Bulk Export Enablement",
+      "description": "Enable high-volume operational data export for planned products.",
+      "driver": "Enterprise bulk export need",
       "targetProductId": "prod_product_3",
       "gapIds": [
-        "gap_rx_band"
+        "gap_bulk_export"
       ],
       "businessValue": "high",
       "effort": "L",
       "riskLevel": "high",
-      "scheduleDrivers": "Antenna supplier lead time and RF test chamber availability",
-      "assumptions": "Assumes enclosure aperture and front-end noise figure can support the new band.",
-      "decisionStatus": "study"
+      "scheduleDrivers": "Representative dataset availability and storage migration window",
+      "assumptions": "Assumes export workloads can be queued without degrading interactive workflows.",
+      "decisionStatus": "study",
+      "blockUpgradeId": "blk_product_3"
+    }
+  ],
+  "blockUpgrades": [
+    {
+      "id": "blk_product_3",
+      "name": "Product 3.0 Block Upgrade",
+      "targetProductId": "prod_product_3",
+      "fromProductId": "prod_product_2",
+      "status": "planning",
+      "plannedRelease": "TBD",
+      "objective": "Close priority target needs for expanded segment support while capturing design and verification impacts.",
+      "candidateIds": [
+        "rc_048",
+        "rc_062"
+      ],
+      "notes": "Initial upgrade package built from unmet needs and high-value candidates."
     }
   ],
   "designElements": [
     {
-      "id": "de_antenna",
-      "name": "Antenna Assembly",
-      "type": "hardware",
-      "owner": "RF Engineering",
-      "description": "Antenna aperture, matching network, mounting, and band-dependent performance."
+      "id": "de_export_service",
+      "name": "Export Service",
+      "type": "software",
+      "owner": "Platform Engineering",
+      "description": "Background export orchestration, file generation, retry handling, and delivery workflow."
     },
     {
-      "id": "de_rf_front_end",
-      "name": "RF Front End",
-      "type": "hardware",
-      "owner": "RF Engineering",
-      "description": "Low-noise amplifier, filtering, switching, and receive chain components."
+      "id": "de_storage_layer",
+      "name": "Storage Layer",
+      "type": "software",
+      "owner": "Data Platform",
+      "description": "Operational data model, query paths, retention strategy, and bulk read performance."
     },
     {
       "id": "de_control_module",
@@ -281,18 +299,18 @@
   ],
   "capabilityDesignLinks": [
     {
-      "id": "cdl_rx_band_antenna",
-      "capabilityId": "cap_rx_band",
-      "designElementId": "de_antenna",
-      "impactType": "band-dependent hardware",
-      "rationale": "RX band changes may require antenna tuning, aperture, or matching changes."
+      "id": "cdl_bulk_export_service",
+      "capabilityId": "cap_bulk_export",
+      "designElementId": "de_export_service",
+      "impactType": "export workflow",
+      "rationale": "Bulk export changes require background job orchestration, retry handling, and delivery behavior."
     },
     {
-      "id": "cdl_rx_band_rf_front_end",
-      "capabilityId": "cap_rx_band",
-      "designElementId": "de_rf_front_end",
-      "impactType": "RF chain compatibility",
-      "rationale": "RX band changes can affect filtering, LNA selection, switching, and calibration."
+      "id": "cdl_bulk_export_storage",
+      "capabilityId": "cap_bulk_export",
+      "designElementId": "de_storage_layer",
+      "impactType": "data access performance",
+      "rationale": "Bulk export changes can affect query performance, retention, and storage throughput."
     },
     {
       "id": "cdl_remote_update_control",
@@ -302,30 +320,31 @@
       "rationale": "Secure update workflows depend on controller memory, boot flow, and security hooks."
     },
     {
-      "id": "cdl_performance_antenna",
+      "id": "cdl_performance_storage",
       "capabilityId": "cap_performance_envelope",
-      "designElementId": "de_antenna",
-      "impactType": "reflector-dependent performance",
-      "rationale": "Large-reflector compatibility depends on antenna assembly and validated performance envelope."
+      "designElementId": "de_storage_layer",
+      "impactType": "large dataset performance",
+      "rationale": "High-volume export readiness depends on validated storage and query performance."
     }
   ],
   "constraints": [
     {
-      "id": "con_reflector_limit",
-      "name": "Reflector Size Operating Limit",
-      "description": "Current active baseline is not assessed for reflectors larger than the validated envelope.",
+      "id": "con_dataset_limit",
+      "name": "Dataset Size Operating Limit",
+      "description": "Current active baseline is not assessed for export jobs above the validated dataset size.",
       "productIds": [
         "prod_product_2"
       ],
-      "limitType": "physical",
-      "limitValue": "Reflector diameter <= validated envelope",
+      "limitType": "performance",
+      "limitValue": "Exports limited to validated dataset size",
       "basis": "SME assessment pending verification evidence.",
       "severity": "major caveat",
-      "workaround": "Route larger-reflector opportunities to planned product assessment.",
+      "workaround": "Route large-export opportunities to planned product assessment.",
       "relatedTargetNeedIds": [
-        "cap_satcom_large_reflector"
+        "cap_enterprise_bulk_export"
       ],
       "relatedCapabilityIds": [
+        "cap_bulk_export",
         "cap_performance_envelope"
       ],
       "evidenceIds": []
@@ -336,16 +355,16 @@
     {
       "id": "imp_001",
       "roadmapCandidateId": "rc_062",
-      "designElementId": "de_antenna",
-      "impactType": "band-dependent hardware",
+      "designElementId": "de_export_service",
+      "impactType": "export workflow",
       "severity": "high",
       "confidence": "medium",
-      "owner": "RF Engineering",
+      "owner": "Platform Engineering",
       "effort": "L",
-      "scheduleDriver": "Antenna supplier quote and chamber time",
-      "verificationConsequence": "Antenna pattern and sensitivity verification required.",
-      "riskConsequence": "May require enclosure or aperture change.",
-      "basis": "Suggested by RX band to antenna link."
+      "scheduleDriver": "Representative dataset and load-test environment availability",
+      "verificationConsequence": "Large dataset export and retry verification required.",
+      "riskConsequence": "May require queueing or storage architecture changes.",
+      "basis": "Suggested by bulk export to export service link."
     }
   ],
   "decisions": [],
